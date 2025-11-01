@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Container, Paper, Title, Text, Stack, Button, TextInput, Loader } from '@mantine/core'
+import { Container, Paper, Title, Text, Stack, Button, TextInput, Loader, Select } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
@@ -10,6 +10,8 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [user, setUser] = useState(null)
+  const [teams, setTeams] = useState([])
+  const [loadingTeams, setLoadingTeams] = useState(true)
 
   const form = useForm({
     initialValues: {
@@ -21,6 +23,23 @@ export default function Onboarding() {
       teamId: (v) => (v.trim().length === 0 ? 'Team ID is required' : null),
     },
   })
+
+  useEffect(() => {
+    // Fetch teams from backend
+    axios.get(`${apiUrl}/api/team`, { withCredentials: true })
+      .then(response => {
+        const teamOptions = response.data.map(team => ({
+          value: team.id.toString(),
+          label: team.department
+        }))
+        setTeams(teamOptions)
+        setLoadingTeams(false)
+      })
+      .catch(error => {
+        console.error('Error fetching teams:', error)
+        setLoadingTeams(false)
+      })
+  }, [apiUrl])
 
   useEffect(() => {
     // Check if user is authenticated
@@ -100,11 +119,14 @@ export default function Onboarding() {
                 {...form.getInputProps('username')}
               />
               
-              <TextInput
-                label="Team ID"
-                placeholder="e.g., T-123"
-                description="Your team identifier"
+              <Select
+                label="Team"
+                placeholder={loadingTeams ? "Loading teams..." : "Select your team"}
+                description="Choose your team/department"
+                data={teams}
                 required
+                searchable
+                disabled={loadingTeams}
                 {...form.getInputProps('teamId')}
               />
 

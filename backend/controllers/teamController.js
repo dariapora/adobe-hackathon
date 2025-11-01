@@ -9,6 +9,17 @@ const Controller = {
         } catch (error) {
             res.status(400).json({ error: error.message })
         }
+    },
+
+    getAllTeams: async (req, res) => {
+        try {
+            const teams = await Team.findAll({
+                order: [['department', 'ASC']]
+            })
+            res.status(200).json(teams)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
     }
 }
 

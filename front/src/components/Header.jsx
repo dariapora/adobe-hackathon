@@ -12,9 +12,10 @@ export default function Header() {
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8090';
   const [activeTab, setActiveTab] = useState("home");
-  const [posts, setPosts] = useState(initialPosts);
+  const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingPosts, setLoadingPosts] = useState(false);
 
   useEffect(() => {
     // Fetch authenticated user from backend
@@ -52,6 +53,33 @@ export default function Header() {
     }
   }, [user]);
 
+  // Fetch posts based on active tab
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchPosts = async () => {
+      setLoadingPosts(true);
+      try {
+        let url = `${apiUrl}/api/post/`;
+        
+        // If on team tab, fetch only team-specific posts
+        if (activeTab === 'team') {
+          url = `${apiUrl}/api/post/team/${user.teamId}`;
+        }
+        // Home tab fetches all posts (public + all teams)
+        
+        const response = await axios.get(url, { withCredentials: true });
+        setPosts(response.data);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+
+    fetchPosts();
+  }, [user, activeTab, apiUrl]);
+
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerText, setComposerText] = useState("");
   const [composerScope, setComposerScope] = useState('all');
@@ -84,28 +112,15 @@ export default function Header() {
 
       console.log('Post created successfully:', response.data);
 
-      // Add the new post from backend to local state
-      const authorName = `${user?.firstName || 'You'} ${user?.lastName || ''}`.trim();
-      const authorHandle = (user?.firstName || 'you').toLowerCase();
-      const newPost = {
-        id: response.data.id || String(Math.random()).slice(2),
-        author: { 
-          name: authorName || 'You', 
-          handle: authorHandle, 
-          avatar: user?.picture || 'https://i.pravatar.cc/100?img=1' 
-        },
-        createdAt: response.data.createdAt || new Date(),
-        tags: [],
-        content: text,
-        image: null,
-        likes: response.data.likes || 0,
-        comments: 0,
-        bookmarked: false,
-        teamId: response.data.team_id,
-        visibility: composerScope,
-      };
+      // Refresh posts list based on current tab
+      let url = `${apiUrl}/api/post/`;
+      if (activeTab === 'team') {
+        url = `${apiUrl}/api/post/team/${user.teamId}`;
+      }
       
-      setPosts((cur) => [newPost, ...cur]);
+      const postsResponse = await axios.get(url, { withCredentials: true });
+      setPosts(postsResponse.data);
+      
       setComposerText("");
       setComposerScope('all');
       setComposerOpen(false);
