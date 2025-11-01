@@ -12,7 +12,7 @@ router.get('/google',
 router.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
-        res.redirect(`${process.env.FRONTEND_URL}/home`);
+        res.redirect(`${process.env.FRONTEND_URL}/`);
     }
 );
 
