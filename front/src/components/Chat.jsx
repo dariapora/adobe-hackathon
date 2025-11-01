@@ -368,7 +368,7 @@ export default function Chat({ user }) {
 
   return (
     <>
-      <Paper shadow="xs" p={0} style={{ height: '600px', display: 'flex', width: '100%' }}>
+      <Paper shadow="xs" p={0} style={{ height: '600px', display: 'flex', width: '600px' }}>
         <Box 
           style={{ 
             width: selectedConversation ? '240px' : '100%',

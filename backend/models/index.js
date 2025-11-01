@@ -6,6 +6,7 @@ const PostLike = require("./postLikeModel");
 const Event = require("./eventModel");
 const Conversation = require('./conversationModel');
 const Message = require('./messageModel');
+const Comment = require('./commentModel');
 
 // User <-> Post relationships
 User.hasMany(Post, {
@@ -59,6 +60,13 @@ Message.belongsTo(User, {
     as: 'sender'
 });
 
+// Comments relationships
+Post.hasMany(Comment, { foreignKey: 'postId', as: 'comments', onDelete: 'CASCADE' });
+Comment.belongsTo(Post, { foreignKey: 'postId', as: 'post' });
+
+User.hasMany(Comment, { foreignKey: 'userId', as: 'userComments', onDelete: 'CASCADE' });
+Comment.belongsTo(User, { foreignKey: 'userId', as: 'author' });
+
 // Post likes relationships
 Post.hasMany(PostLike, { foreignKey: 'postId', as: 'likesList', onDelete: 'CASCADE' });
 PostLike.belongsTo(Post, { foreignKey: 'postId', as: 'post' });
@@ -74,6 +82,7 @@ module.exports = {
     User,
     Team,
     Post,
+    Comment,
     PostLike,
     Event,
     Conversation,
