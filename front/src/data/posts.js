@@ -1,42 +1,39 @@
-export const initialPosts = [
-  {
-    id: '1',
-    author: { name: 'Daria Pora', handle: 'pdaria05', avatar: 'https://media.istockphoto.com/id/185233538/photo/smiling-pug-walking-in-summer-park.jpg?s=612x612&w=0&k=20&c=DOzStXr1YD1Wx5-12N5X2wUGu0w1gmu7iAikVnWGIoU=' },
-    createdAt: new Date(Date.now() - 1000 * 60 * 5),
-    teamId: 'T-123',
-    visibility: 'team',
-    content:
-      'Got my coffee from the new place today. Who else tried it?',
-    image: 'https://media.gettyimages.com/id/2161651297/video/woman-with-a-cup-of-morning-coffee-in-hand.jpg?s=640x640&k=20&c=-FB5kgY-LNlaoBRxPIQO0f1em9ieISHy6v7xCoBda98=',
-    likes: 12,
-    comments: 4,
-    bookmarked: false,
-  },
-  {
-    id: '2',
-    author: { name: 'Razvan Petcu', handle: 'rzv_ptc_', avatar: 'https://thumbs.dreamstime.com/b/portrait-handsome-teenage-boy-playing-guitar-outdoor-boy-using-classic-guitar-male-alone-making-music-portrait-handsome-234820927.jpg' },
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
-    teamId: 'T-456',
-    visibility: 'team',
-    content:
-      'Dreaming of a teambuilding in Hawaii... but back to work now.',
-    image: null,
-    likes: 38,
-    comments: 12,
-    bookmarked: true,
-  },
-  {
-    id: '3',
-    author: { name: 'Zara Patel', handle: 'zara', avatar: 'https://i.pravatar.cc/100?img=30' },
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28),
-    tags: ['#infra', '#kudos'],
-    teamId: 'T-123',
-    visibility: 'all',
-    content:
-      'Big kudos to @ops for squashing the flaky CI job. Pipelines are finally green again. 🚦',
-    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1600&auto=format&fit=crop',
-    likes: 7,
-    comments: 2,
-    bookmarked: false,
-  },
-];
+import axios from 'axios'
+
+export const initialPosts = []
+
+export async function fetchPosts() {
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8090'
+
+  const [{ data: posts }, { data: users }] = await Promise.all([
+    axios.get(`${apiUrl}/api/post/`, { withCredentials: true }),
+    axios.get(`${apiUrl}/api/user/`, { withCredentials: true }),
+  ])
+
+  const usersById = new Map(users.map((u) => [u.id, u]))
+
+  return posts.map((p) => {
+    const u = usersById.get(p.user_id) || {}
+    const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Unknown'
+    // Set "username" shown in UI to the user's full name
+    const handle = name
+
+    return {
+      id: p.id,
+      author: {
+        name,
+        handle,
+        avatar: u.profile_picture || 'https://i.pravatar.cc/100?img=1',
+      },
+      createdAt: p.createdAt,
+      tags: [],
+      content: p.content || '',
+      image: p.image || null,
+      likes: p.likes ?? 0,
+      comments: 0,
+      bookmarked: false,
+      teamId: u.team_id || null,
+      visibility: p.visibility || 'all',
+    }
+  })
+}

@@ -4,7 +4,7 @@ import { Group, Image, Tabs, Box, Container, AppShell, Textarea, SegmentedContro
 import axios from "axios";
 import Home from "./Home";
 import Team from "./Team"; 
-import { initialPosts } from "../data/posts";
+import { initialPosts, fetchPosts } from "../data/posts";
 import Nav from "./Nav.jsx";
 import logo from "../assets/logo.png";
 
@@ -45,6 +45,14 @@ export default function Header() {
   }, [apiUrl, navigate]);
 
   useEffect(() => {
+    if (!loading) {
+      fetchPosts()
+        .then((data) => setPosts(data))
+        .catch((err) => console.error('Failed to load posts', err))
+    }
+  }, [loading])
+
+  useEffect(() => {
     // keep user in localStorage for persistence across reloads
     if (user) {
       try { localStorage.setItem('user', JSON.stringify(user)); } catch (_) {}
@@ -63,7 +71,8 @@ export default function Header() {
     const text = composerText.trim();
     if (!text || !user) return;
     const authorName = `${user?.firstName || 'You'} ${user?.lastName || ''}`.trim();
-    const authorHandle = (user?.firstName || 'you').toLowerCase();
+    // Set displayed username to full name
+    const authorHandle = authorName || 'You';
     const newPost = {
       id: String(Math.random()).slice(2),
       author: { 

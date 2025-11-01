@@ -14,7 +14,7 @@ const Controller = {
 
     getAllPosts: async (req, res) => {
         try {
-            const posts = Post.findAll();
+            const posts = await Post.findAll();
 
             if(!posts)
                 return res.status(400).send("No posts found");
