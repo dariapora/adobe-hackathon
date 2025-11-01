@@ -204,6 +204,10 @@ export default function Header() {
       setComposerImageFile(null);
       setComposerImagePreview("");
       setComposerOpen(false);
+      // Ensure we land on Home after adding a post
+      setActiveView("Home");
+      setActiveTab("home");
+      navigate('/');
     } catch (error) {
       console.error('Error creating post:', error);
       console.error('Error response:', error.response?.data);
@@ -235,7 +239,8 @@ export default function Header() {
         <Box
           style={{
             borderBottom: "1px solid var(--mantine-color-gray-3)",
-            background: "var(--mantine-color-body)",
+            background: "var(--mantine-color-checkin-7)",
+            color: 'white',
           }}
         >
             <Group justify="space-between" h={60} px="md">
@@ -261,7 +266,7 @@ export default function Header() {
         </Box>
       </AppShell.Header>
 
-      <AppShell.Navbar>
+      <AppShell.Navbar style={{ background: 'var(--mantine-color-checkin-0)' }}>
         <Box p="sm">
           <Nav onAddPost={handleAddPost} onSelect={handleNavSelect} />
         </Box>
@@ -276,7 +281,7 @@ export default function Header() {
           ) : (
             <>
               {composerOpen && activeTab !== 'experience' && (
-                <Card withBorder radius="md" p="md" mb="md">
+                <Card withBorder radius="md" p="md" mb="md" shadow="sm" style={{ borderLeft: '4px solid var(--mantine-color-checkin-5)' }}>
                   <Stack gap="sm">
                     <Text fw={600}>Create a post</Text>
                     <SegmentedControl

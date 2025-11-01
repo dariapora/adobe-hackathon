@@ -21,6 +21,9 @@ export default function Nav({ onAddPost, onSelect }) {
       description={item.description}
       rightSection={item.rightSection}
       leftSection={item.icon ? <item.icon size={16} stroke={1.5} /> : null}
+      color="checkin"
+      variant="light"
+      radius="md"
       onClick={() => {
         setActive(index);
         if (onSelect) onSelect(item.label);

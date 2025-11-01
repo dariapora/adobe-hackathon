@@ -38,7 +38,7 @@ export default function Team({ posts = [], user, onLike }) {
   return (
     <Container size="lg">
       <Stack my="md" gap="md">
-        <Title order={2}>Team</Title>
+        <Title order={2} c="checkin.7">Team</Title>
         <Text c="dimmed">Department: {department || 'Unknown'} • Team: {teamId || 'unknown'}</Text>
 
         {posts.length === 0 ? (
@@ -48,7 +48,7 @@ export default function Team({ posts = [], user, onLike }) {
         ) : (
           <Stack>
             {posts.map((post) => (
-              <Card key={post.id} withBorder radius="md" p="md">
+              <Card key={post.id} withBorder radius="md" p="md" shadow="sm" style={{ borderLeft: '4px solid var(--mantine-color-checkin-5)' }}>
                 <Group align="flex-start">
                   <Avatar 
                     src={post.author?.profile_picture} 
@@ -117,7 +117,7 @@ export default function Team({ posts = [], user, onLike }) {
                         </Stack>
                         <Group align="flex-end">
                           <TextInput style={{ flex: 1 }} placeholder="Add a comment" value={newComment} onChange={(e) => setNewComment(e.currentTarget.value)} />
-                          <Button size="xs" onClick={async () => {
+                          <Button size="xs" color="checkin" onClick={async () => {
                             const text = newComment.trim()
                             if (!text) return
                             try {

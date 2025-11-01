@@ -9,16 +9,16 @@ import Profile from './components/Profile.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 const checkin = [
-  '#ecf4ff',
-  '#dce4f5',
-  '#b9c7e2',
-  '#94a8d0',
-  '#748dc0',
-  '#5f7cb7',
-  '#5474b4',
-  '#44639f',
-  '#3a5890',
-  '#2c4b80',
+  '#eef0f9', // 0 - lightest tint
+  '#e3e6f5', // 1
+  '#d6dbef', // 2
+  '#c8cfe7', // 3
+  '#b8c2df', // 4
+  '#99A0CA', // 5 - provided palette (light)
+  '#5C69AC', // 6 - provided palette (primary)
+  '#4C5897', // 7 - provided palette (dark)
+  '#414c88', // 8 - between 7 and 9
+  '#36437A', // 9 - provided palette (darkest)
 ]
 
 const theme = createTheme({

@@ -19,18 +19,18 @@ export default function Home({ posts = [], onLike }) {
   return (
     <Container size="xl">
       <Stack my="md" gap="md">
-        <Title order={2}>Home</Title>
+        <Title order={2} c="checkin.7">Home</Title>
         <Text c="dimmed">Welcome to your CheckIn feed.</Text>
 
         <Stack>
           {posts.map((post) => (
-            <Card key={post.id} withBorder radius="md" p="md">
+            <Card key={post.id} withBorder radius="md" p="md" shadow="sm" style={{ borderLeft: '4px solid var(--mantine-color-checkin-5)' }}>
               <Group align="flex-start">
                 <Avatar 
                   src={post.author?.profile_picture} 
                   radius="xl" 
                 />
-                <Stack gap={2} style={{ flex: 1, width: '300px' }}>
+                <Stack gap={2} style={{ flex: 1, width: '800px' }}>
                   <Group gap={6}>
                     <Text fw={600}>
                       {post.author?.first_name} {post.author?.last_name}
@@ -95,7 +95,7 @@ export default function Home({ posts = [], onLike }) {
                   </Stack>
                   <Group align="flex-end">
                     <TextInput style={{ flex: 1 }} placeholder="Add a comment" value={newComment} onChange={(e) => setNewComment(e.currentTarget.value)} />
-                    <Button size="xs" onClick={async () => {
+                    <Button size="xs" color="checkin" onClick={async () => {
                       const text = newComment.trim()
                       if (!text) return
                       try {
