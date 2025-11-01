@@ -4,6 +4,7 @@ import { createTheme, MantineProvider } from '@mantine/core'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Header from './components/Header.jsx'
 import Login from './components/Login.jsx'
+import Onboarding from './components/Onboarding.jsx'
 
 const checkin = [
   '#ecf4ff',
@@ -29,6 +30,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Header />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </MantineProvider>
