@@ -12,11 +12,12 @@ export async function fetchPosts() {
 
   const usersById = new Map(users.map((u) => [u.id, u]))
 
-  return posts.map((p) => {
+  const shaped = posts.map((p) => {
     const u = usersById.get(p.user_id) || {}
     const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Unknown'
-    // Set "username" shown in UI to the user's full name
-    const handle = name
+    // Prefer actual username; otherwise create a simple slug from full name
+    const fallbackSlug = [u.first_name, u.last_name].filter(Boolean).join('.').toLowerCase()
+    const handle = (u.username || fallbackSlug || 'user').trim()
 
     return {
       id: p.id,
@@ -32,8 +33,12 @@ export async function fetchPosts() {
       likes: p.likes ?? 0,
       comments: 0,
       bookmarked: false,
-      teamId: u.team_id || null,
-      visibility: p.visibility || 'all',
+      // visibility is team id or null; teamId used for badge display
+      teamId: p.visibility || null,
+      visibility: p.visibility ?? null,
     }
   })
+
+  // Ensure newest first in case backend ordering changes
+  return shaped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 }

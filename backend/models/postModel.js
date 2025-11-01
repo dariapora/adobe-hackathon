@@ -27,8 +27,10 @@ const Post = sequelize.define('posts', {
     },
 
     visibility: {
-        type: DataTypes.ENUM('all', 'team'),
-        defaultValue: 'all'
+        // Team ID string or null (null means visible to everyone)
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null
     }
 },
     {

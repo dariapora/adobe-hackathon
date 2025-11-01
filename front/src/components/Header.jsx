@@ -28,6 +28,7 @@ export default function Header() {
         } else {
           // Use first_name and last_name directly from database (from Google)
           setUser({
+            id: userData.id,
             firstName: userData.first_name || 'User',
             lastName: userData.last_name || '',
             username: userData.username,
@@ -62,17 +63,31 @@ export default function Header() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerText, setComposerText] = useState("");
   const [composerScope, setComposerScope] = useState('all');
+  const [composerImage, setComposerImage] = useState(null);
+
+  const fileInputId = "composer-file-input";
+
+  const onSelectImage = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setComposerImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleAddPost = () => {
     setComposerScope(activeTab === 'team' ? 'team' : 'all');
     setComposerOpen(true);
   };
-  const submitPost = () => {
+  const submitPost = async () => {
     const text = composerText.trim();
     if (!text || !user) return;
     const authorName = `${user?.firstName || 'You'} ${user?.lastName || ''}`.trim();
-    // Set displayed username to full name
-    const authorHandle = authorName || 'You';
+    // Prefer user's username; otherwise slug from name
+    const authorHandle = (user?.username && user.username.trim()) || `${(user?.firstName || '').toLowerCase()}.${(user?.lastName || '').toLowerCase()}`.replace(/^\.|\.$/g, '') || 'you'
+    const targetVisibility = composerScope === 'team' ? (user?.teamId || null) : null;
     const newPost = {
       id: String(Math.random()).slice(2),
       author: { 
@@ -83,16 +98,30 @@ export default function Header() {
       createdAt: new Date(),
       tags: [],
       content: text,
-      image: null,
+      image: composerImage,
       likes: 0,
       comments: 0,
       bookmarked: false,
-      teamId: composerScope === 'team' ? (user?.teamId || 'T-000') : (user?.teamId || null),
-      visibility: composerScope,
+      teamId: targetVisibility,
+      visibility: targetVisibility,
     };
-    setPosts((cur) => [newPost, ...cur]);
+    try {
+      await axios.post(`${apiUrl}/api/post/create-post`, {
+        user_id: user.id,
+        content: text,
+        image: composerImage,
+        visibility: targetVisibility,
+      }, { withCredentials: true })
+      const refreshed = await fetchPosts()
+      setPosts(refreshed)
+    } catch (e) {
+      console.error('Failed to create post', e)
+      // Fallback optimistic update if API fails
+      setPosts((cur) => [newPost, ...cur])
+    }
     setComposerText("");
     setComposerScope('all');
+    setComposerImage(null);
     setComposerOpen(false);
   };
 
@@ -151,6 +180,16 @@ export default function Header() {
                   value={composerText}
                   onChange={(e) => setComposerText(e.currentTarget.value)}
                 />
+                    <Group gap="sm">
+                      <input id={fileInputId} type="file" accept="image/*" style={{ display: 'none' }} onChange={onSelectImage} />
+                      <Button variant="light" onClick={() => document.getElementById(fileInputId)?.click()}>Add image</Button>
+                      {composerImage && (
+                        <Text c="dimmed" size="sm">Image attached</Text>
+                      )}
+                    </Group>
+                    {composerImage && (
+                      <Image src={composerImage} alt="Preview" radius="sm" w={240} />
+                    )}
                 <Group justify="flex-end">
                   <Button variant="light" onClick={() => setComposerOpen(false)}>Cancel</Button>
                   <Button color="checkin" onClick={submitPost}>Post</Button>
