@@ -85,6 +85,7 @@ export default function Header() {
   const [composerImagePreview, setComposerImagePreview] = useState("");
   const [composerUploading, setComposerUploading] = useState(false);
   const [composerUrgent, setComposerUrgent] = useState(false);
+  const [composerHelp, setComposerHelp] = useState(false);
 
   const handleNavSelect = (label) => {
     // Route all navigation from left sidebar
@@ -177,7 +178,8 @@ export default function Header() {
         image: imageUrl,
         team_id: teamIdToSend,
         visibility: isTeamPost ? 'team' : 'all',
-        urgent: composerUrgent
+        urgent: composerUrgent,
+        help: composerHelp
       };
       
       console.log('Submitting post:', postData);
@@ -217,6 +219,7 @@ export default function Header() {
       setComposerImageFile(null);
       setComposerImagePreview("");
       setComposerUrgent(false);
+      setComposerHelp(false);
       setComposerOpen(false);
       // Ensure we land on Home after adding a post
       setActiveView("Home");
@@ -332,11 +335,18 @@ export default function Header() {
                     {composerImagePreview && (
                       <Image src={composerImagePreview} alt="preview" radius="sm" w={320} />
                     )}
-                    <Checkbox
-                      label="Help me out (urgent)"
-                      checked={composerUrgent}
-                      onChange={(e) => setComposerUrgent(e.currentTarget.checked)}
-                    />
+                    <Group gap="md">
+                      <Checkbox
+                        label="Urgent"
+                        checked={composerUrgent}
+                        onChange={(e) => setComposerUrgent(e.currentTarget.checked)}
+                      />
+                      <Checkbox
+                        label="Help me out!"
+                        checked={composerHelp}
+                        onChange={(e) => setComposerHelp(e.currentTarget.checked)}
+                      />
+                    </Group>
                     <Group justify="flex-end">
                       <Button variant="light" onClick={() => setComposerOpen(false)}>Cancel</Button>
                       <Button color="checkin" onClick={submitPost} loading={composerUploading}>Post</Button>

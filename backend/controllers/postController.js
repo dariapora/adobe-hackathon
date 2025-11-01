@@ -39,9 +39,9 @@ const Controller = {
     },
     createPost: async (req, res) => {
         try {
-            const { user_id, content, image, team_id, visibility, urgent } = req.body;
+            const { user_id, content, image, team_id, visibility, urgent, help } = req.body;
             
-            console.log('Creating post with data:', { user_id, content, image, team_id, visibility, urgent });
+            console.log('Creating post with data:', { user_id, content, image, team_id, visibility, urgent, help });
 
             // If visibility is 'team', set team_id. If 'all', team_id is null
             const postTeamId = visibility === 'team' ? team_id : null;
@@ -53,7 +53,8 @@ const Controller = {
                 content,
                 image,
                 team_id: postTeamId,
-                urgent: !!urgent
+                urgent: !!urgent,
+                help: !!help
             });
 
             console.log('Post created:', newPost.id);
@@ -119,7 +120,7 @@ const Controller = {
                     }
                 ],
                 group: ['posts.id', 'author.id'],
-                order: [['urgent', 'DESC'], ['createdAt', 'DESC']]
+                order: [['urgent', 'DESC'], ['help', 'DESC'], ['createdAt', 'DESC']]
             });
 
             if (!posts || posts.length === 0) {
@@ -155,7 +156,7 @@ const Controller = {
                     }
                 ],
                 group: ['posts.id', 'author.id'],
-                order: [[ 'urgent', 'DESC' ], ['createdAt', 'DESC']]
+                order: [[ 'urgent', 'DESC' ], ['help', 'DESC'], ['createdAt', 'DESC']]
             });
 
             res.status(200).json(posts);

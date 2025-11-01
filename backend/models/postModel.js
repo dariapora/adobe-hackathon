@@ -27,6 +27,11 @@ const Post = sequelize.define('posts', {
         defaultValue: false
     },
 
+    help: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+
     likes: {
         type: DataTypes.INTEGER,
         defaultValue: 0

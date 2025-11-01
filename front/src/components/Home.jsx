@@ -17,16 +17,15 @@ export default function Home({ posts = [], user, onLike, onDelete }) {
   const [commentsByPost, setCommentsByPost] = useState({})
   const [newComment, setNewComment] = useState("")
   const urgentPosts = posts.filter((p) => !!p.urgent)
-  const otherPosts = posts.filter((p) => !p.urgent)
+  const helpOnlyPosts = posts.filter((p) => !p.urgent && !!p.help)
+  const otherPosts = posts.filter((p) => !p.urgent && !p.help)
   return (
     <Container size="xl">
       <Stack my="md" gap="md">
-        <Title order={2} c="checkin.7">Home</Title>
-
-        {urgentPosts.length > 0 && (
+        {(urgentPosts.length + helpOnlyPosts.length) > 0 && (
           <Stack>
             <Title order={4}>Help me out</Title>
-            {urgentPosts.map((post) => (
+            {[...urgentPosts, ...helpOnlyPosts].map((post) => (
               <Card key={post.id} withBorder radius="md" p="md" shadow="sm" style={{ borderLeft: '4px solid var(--mantine-color-checkin-5)' }}>
                 <Group align="flex-start">
                   <Avatar 
@@ -46,6 +45,7 @@ export default function Home({ posts = [], user, onLike, onDelete }) {
                         {getBadgeForXp(post.author?.experience || 0).label}
                       </Badge>
                       {post.urgent && <Badge color="red" variant="filled">Urgent</Badge>}
+                      {post.help && <Badge color="yellow" variant="light">Help</Badge>}
                     </Group>
                     <Text style={{ whiteSpace: 'pre-wrap' }}>{post.content}</Text>
                     {post.image && (
@@ -147,6 +147,7 @@ export default function Home({ posts = [], user, onLike, onDelete }) {
                       {getBadgeForXp(post.author?.experience || 0).label}
                     </Badge>
                     {post.urgent && <Badge color="red" variant="filled">Urgent</Badge>}
+                    {post.help && <Badge color="yellow" variant="light">Help</Badge>}
                   </Group>
                   <Text style={{ whiteSpace: 'pre-wrap' }}>{post.content}</Text>
                   {post.image && (
