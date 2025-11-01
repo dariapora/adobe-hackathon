@@ -4,6 +4,7 @@ import Home from "./Home";
 import Team from "./Team"; 
 import { initialPosts } from "../data/posts";
 import Nav from "./Nav.jsx";
+import logo from "../assets/logo.png";
 
 export default function Header() {
   const [activeTab, setActiveTab] = useState("home");
@@ -65,13 +66,7 @@ export default function Header() {
         >
             <Group justify="space-between" h={60} px="md">
               <Group gap="xs">
-                <Image
-                  src="/logo.png"
-                  alt="Logo"
-                  width={32}
-                  height={32}
-                  radius="sm"
-                />
+                <Image src={logo} alt="Logo" width={32} height={32} radius="sm" />
               </Group>
               <Tabs value={activeTab} onChange={setActiveTab}>
                 <Tabs.List>
