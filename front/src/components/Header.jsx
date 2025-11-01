@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Group, Image, Tabs, Box, Container, AppShell, Textarea, SegmentedControl, Button, Card, Stack, Text, Avatar, ActionIcon } from "@mantine/core";
+import { Group, Image, Tabs, Box, Container, AppShell, Textarea, SegmentedControl, Button, Card, Stack, Text, Avatar, ActionIcon, Checkbox } from "@mantine/core";
 import axios from "axios";
 import Home from "./Home";
 import Team from "./Team"; 
@@ -84,6 +84,7 @@ export default function Header() {
   const [composerImageFile, setComposerImageFile] = useState(null);
   const [composerImagePreview, setComposerImagePreview] = useState("");
   const [composerUploading, setComposerUploading] = useState(false);
+  const [composerUrgent, setComposerUrgent] = useState(false);
 
   const handleNavSelect = (label) => {
     // Route all navigation from left sidebar
@@ -130,6 +131,17 @@ export default function Header() {
     setComposerScope('all');
     setComposerOpen(true);
   };
+  const handleDelete = async (postId) => {
+    if (!postId) return;
+    const ok = window.confirm('Delete this post?');
+    if (!ok) return;
+    try {
+      await axios.delete(`${apiUrl}/api/post/${postId}`, { withCredentials: true });
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    } catch (e) {
+      alert('Failed to delete post');
+    }
+  };
   const submitPost = async () => {
     const text = composerText.trim();
     if (!text || !user) return;
@@ -164,7 +176,8 @@ export default function Header() {
         content: text,
         image: imageUrl,
         team_id: teamIdToSend,
-        visibility: isTeamPost ? 'team' : 'all'
+        visibility: isTeamPost ? 'team' : 'all',
+        urgent: composerUrgent
       };
       
       console.log('Submitting post:', postData);
@@ -203,6 +216,7 @@ export default function Header() {
       setComposerScope('all');
       setComposerImageFile(null);
       setComposerImagePreview("");
+      setComposerUrgent(false);
       setComposerOpen(false);
       // Ensure we land on Home after adding a post
       setActiveView("Home");
@@ -318,6 +332,11 @@ export default function Header() {
                     {composerImagePreview && (
                       <Image src={composerImagePreview} alt="preview" radius="sm" w={320} />
                     )}
+                    <Checkbox
+                      label="Help me out (urgent)"
+                      checked={composerUrgent}
+                      onChange={(e) => setComposerUrgent(e.currentTarget.checked)}
+                    />
                     <Group justify="flex-end">
                       <Button variant="light" onClick={() => setComposerOpen(false)}>Cancel</Button>
                       <Button color="checkin" onClick={submitPost} loading={composerUploading}>Post</Button>
@@ -325,8 +344,8 @@ export default function Header() {
                   </Stack>
                 </Card>
               )}
-              {activeTab === "home" && <Home posts={posts} onLike={handleLike} />}
-              {activeTab === "team" && <Team posts={posts} user={user} onLike={handleLike} />}
+              {activeTab === "home" && <Home posts={posts} user={user} onLike={handleLike} onDelete={handleDelete} />}
+              {activeTab === "team" && <Team posts={posts} user={user} onLike={handleLike} onDelete={handleDelete} />}
               {activeTab === "experience" && <Experience user={user} />}
               {activeTab === "schedule" && <Schedule user={user} />}
             </>

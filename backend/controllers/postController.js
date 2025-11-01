@@ -39,9 +39,9 @@ const Controller = {
     },
     createPost: async (req, res) => {
         try {
-            const { user_id, content, image, team_id, visibility } = req.body;
+            const { user_id, content, image, team_id, visibility, urgent } = req.body;
             
-            console.log('Creating post with data:', { user_id, content, image, team_id, visibility });
+            console.log('Creating post with data:', { user_id, content, image, team_id, visibility, urgent });
 
             // If visibility is 'team', set team_id. If 'all', team_id is null
             const postTeamId = visibility === 'team' ? team_id : null;
@@ -52,7 +52,8 @@ const Controller = {
                 user_id,
                 content,
                 image,
-                team_id: postTeamId
+                team_id: postTeamId,
+                urgent: !!urgent
             });
 
             console.log('Post created:', newPost.id);
@@ -118,7 +119,7 @@ const Controller = {
                     }
                 ],
                 group: ['posts.id', 'author.id'],
-                order: [['createdAt', 'DESC']]
+                order: [['urgent', 'DESC'], ['createdAt', 'DESC']]
             });
 
             if (!posts || posts.length === 0) {
@@ -154,7 +155,7 @@ const Controller = {
                     }
                 ],
                 group: ['posts.id', 'author.id'],
-                order: [['createdAt', 'DESC']]
+                order: [[ 'urgent', 'DESC' ], ['createdAt', 'DESC']]
             });
 
             res.status(200).json(posts);
@@ -192,6 +193,28 @@ const Controller = {
         } catch (err) {
             console.error('Error liking post:', err);
             return res.status(500).json({ error: 'Failed to like post' });
+        }
+    },
+
+    deletePost: async (req, res) => {
+        try {
+            const { id } = req.params;
+            if (!req.isAuthenticated || !req.isAuthenticated()) {
+                return res.status(401).json({ error: 'Not authenticated' });
+            }
+            const userId = req.user.id;
+
+            const post = await Post.findByPk(id);
+            if (!post) return res.status(404).json({ error: 'Post not found' });
+            if (String(post.user_id) !== String(userId)) {
+                return res.status(403).json({ error: 'Forbidden' });
+            }
+
+            await post.destroy();
+            return res.status(200).json({ ok: true, id });
+        } catch (err) {
+            console.error('Error deleting post:', err);
+            return res.status(500).json({ error: 'Failed to delete post' });
         }
     }
 };

@@ -7,5 +7,6 @@ router.get('/', postController.getAllPosts);
 router.get('/team/:team_id', postController.getTeamPosts);
 router.post('/upload-image', postController.uploadImage);
 router.post('/:id/like', postController.likePost);
+router.delete('/:id', postController.deletePost);
 
 module.exports = router;

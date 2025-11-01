@@ -131,7 +131,18 @@ export default function Chat({ user }) {
         const response = await axios.get(`${API_URL}/api/messages/conversations`, {
           withCredentials: true
         });
-        setConversations(response.data);
+        const convs = Array.isArray(response.data) ? response.data : [];
+        const byUser = new Map();
+        for (const conv of convs) {
+          const otherId = conv?.otherUser?.id;
+          if (!otherId) { byUser.set(`conv-${conv.id}`, conv); continue; }
+          const prev = byUser.get(otherId);
+          const prevTime = prev ? new Date(prev.lastMessageAt || 0).getTime() : -Infinity;
+          const currTime = new Date(conv.lastMessageAt || 0).getTime();
+          if (!prev || currTime > prevTime) byUser.set(otherId, conv);
+        }
+        const deduped = Array.from(byUser.values()).sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
+        setConversations(deduped);
       } catch (error) {
         console.error('Error loading conversations:', error);
       }
@@ -366,6 +377,8 @@ export default function Chat({ user }) {
     );
   }
 
+  const conversationUserIds = new Set(conversations.map(c => c?.otherUser?.id).filter(Boolean));
+
   return (
     <>
       <Paper shadow="xs" p={0} style={{ height: '600px', display: 'flex', width: '600px' }}>
@@ -429,7 +442,9 @@ export default function Chat({ user }) {
             <Switch size="xs" checked={teamOnly} onChange={(e) => setTeamOnly(e.currentTarget.checked)} />
           </Group>
           <Stack gap={0}>
-            {(teamOnly ? allUsers.filter(u => u.team_id === user.teamId) : allUsers).map((u) => (
+            {(teamOnly ? allUsers.filter(u => u.team_id === user.teamId) : allUsers)
+              .filter((u) => !conversationUserIds.has(u.id))
+              .map((u) => (
               <Box
                 key={u.id}
                 p="md"
