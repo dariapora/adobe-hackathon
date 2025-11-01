@@ -7,7 +7,7 @@ const data = [
   { label: 'Schedule' },
 ];
 
-export default function Nav({ onAddPost }) {
+export default function Nav({ onAddPost, onSelect }) {
   const [active, setActive] = useState(0);
 
   const items = data.map((item, index) => (
@@ -18,7 +18,10 @@ export default function Nav({ onAddPost }) {
       description={item.description}
       rightSection={item.rightSection}
       leftSection={item.icon ? <item.icon size={16} stroke={1.5} /> : null}
-      onClick={() => setActive(index)}
+      onClick={() => {
+        setActive(index);
+        if (typeof onSelect === 'function') onSelect(item.label);
+      }}
     />
   ));
 
