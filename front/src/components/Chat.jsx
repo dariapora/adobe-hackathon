@@ -125,6 +125,8 @@ export default function Chat({ user }) {
     };
 
     loadConversations();
+    // Also load all users for the sidebar list
+    loadUsers();
   }, [user?.id]);
 
   // Load all users for new chat
@@ -364,6 +366,36 @@ export default function Chat({ user }) {
               </Box>
             ))
           )}
+          <Divider my="sm" label="All Users" labelPosition="center" />
+          <Stack gap={0}>
+            {allUsers.map((u) => (
+              <Box
+                key={u.id}
+                p="md"
+                style={{
+                  cursor: 'pointer',
+                  borderBottom: '1px solid var(--mantine-color-gray-2)'
+                }}
+                onClick={() => startNewConversation(u)}
+              >
+                <Group gap="sm" wrap="nowrap">
+                  <Avatar 
+                    src={u.profile_picture} 
+                    radius="xl" 
+                    size="md" 
+                  />
+                  <Box style={{ flex: 1, minWidth: 0 }}>
+                    <Text size="sm" fw={500} truncate>
+                      {u.first_name} {u.last_name}
+                    </Text>
+                    {u.username && (
+                      <Text size="xs" c="dimmed" truncate>@{u.username}</Text>
+                    )}
+                  </Box>
+                </Group>
+              </Box>
+            ))}
+          </Stack>
         </ScrollArea>
       </Box>
 

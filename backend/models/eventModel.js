@@ -21,6 +21,11 @@ const Event = sequelize.define('events', {
     title: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+
+    team_id: {
+        type: DataTypes.STRING,
+        allowNull: false
     }
 },
 {
