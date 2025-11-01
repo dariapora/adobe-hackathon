@@ -18,18 +18,15 @@ export default function Header() {
   const [loadingPosts, setLoadingPosts] = useState(false);
 
   useEffect(() => {
-    // Fetch authenticated user from backend
     axios.get(`${apiUrl}/auth/user`, { withCredentials: true })
       .then(response => {
         const userData = response.data.user;
         
-        // Check if user needs to complete onboarding
         if (!userData.username || !userData.team_id) {
           navigate('/onboarding');
         } else {
-          // Use first_name and last_name directly from database (from Google)
           setUser({
-            id: userData.id,  // Add user id for API calls
+            id: userData.id,  
             firstName: userData.first_name || 'User',
             lastName: userData.last_name || '',
             username: userData.username,
@@ -47,13 +44,11 @@ export default function Header() {
   }, [apiUrl, navigate]);
 
   useEffect(() => {
-    // keep user in localStorage for persistence across reloads
     if (user) {
       try { localStorage.setItem('user', JSON.stringify(user)); } catch (_) {}
     }
   }, [user]);
 
-  // Fetch posts based on active tab
   useEffect(() => {
     if (!user) return;
 
@@ -62,11 +57,9 @@ export default function Header() {
       try {
         let url = `${apiUrl}/api/post/`;
         
-        // If on team tab, fetch only team-specific posts
         if (activeTab === 'team') {
           url = `${apiUrl}/api/post/team/${user.teamId}`;
         }
-        // Home tab fetches all posts (public + all teams)
         
         const response = await axios.get(url, { withCredentials: true });
         setPosts(response.data);
@@ -103,7 +96,6 @@ export default function Header() {
       
       console.log('Submitting post:', postData);
       
-      // Send post to backend
       const response = await axios.post(
         `${apiUrl}/api/post/create-post`,
         postData,
@@ -112,7 +104,6 @@ export default function Header() {
 
       console.log('Post created successfully:', response.data);
 
-      // Refresh posts list based on current tab
       let url = `${apiUrl}/api/post/`;
       if (activeTab === 'team') {
         url = `${apiUrl}/api/post/team/${user.teamId}`;
