@@ -60,16 +60,13 @@ export default function Header() {
     const fetchPosts = async () => {
       setLoadingPosts(true);
       try {
-        let url = `${apiUrl}/api/post/`;
-        
-        // If on team tab, fetch only team-specific posts
-        if (activeTab === 'team') {
-          url = `${apiUrl}/api/post/team/${user.teamId}`;
-        }
-        // Home tab fetches all posts (public + all teams)
-        
+        const url = `${apiUrl}/api/post/`;
         const response = await axios.get(url, { withCredentials: true });
-        setPosts(response.data);
+        const data = Array.isArray(response.data) ? response.data : [];
+        const result = activeTab === 'team'
+          ? data.filter((p) => p.team_id && p.team_id === user.teamId)
+          : data.filter((p) => p.team_id == null);
+        setPosts(result);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -93,12 +90,13 @@ export default function Header() {
     if (!text || !user) return;
     
     try {
+      const teamIdToSend = activeTab === 'team' ? user.teamId : null;
       const postData = {
         user_id: user.id,
         content: text,
         image: null,
-        team_id: user.teamId,
-        visibility: composerScope
+        team_id: teamIdToSend,
+        visibility: activeTab === 'team' ? 'team' : 'all'
       };
       
       console.log('Submitting post:', postData);
@@ -113,13 +111,14 @@ export default function Header() {
       console.log('Post created successfully:', response.data);
 
       // Refresh posts list based on current tab
-      let url = `${apiUrl}/api/post/`;
-      if (activeTab === 'team') {
-        url = `${apiUrl}/api/post/team/${user.teamId}`;
-      }
-      
+      // Re-fetch and apply same filtering rules
+      const url = `${apiUrl}/api/post/`;
       const postsResponse = await axios.get(url, { withCredentials: true });
-      setPosts(postsResponse.data);
+      const allData = Array.isArray(postsResponse.data) ? postsResponse.data : [];
+      const next = activeTab === 'team'
+        ? allData.filter((p) => p.team_id && p.team_id === user.teamId)
+        : allData.filter((p) => p.team_id == null);
+      setPosts(next);
       
       setComposerText("");
       setComposerScope('all');

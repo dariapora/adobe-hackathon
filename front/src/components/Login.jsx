@@ -27,6 +27,8 @@ export default function Login() {
           <Title order={2}>CheckIn</Title>
           <Text c="dimmed">Sign in with Google to continue</Text>
 
+          {/* Team selection moved to onboarding after Google auth */}
+
           <Button 
             leftSection={<IconBrandGoogle size={20} />}
             size="lg"

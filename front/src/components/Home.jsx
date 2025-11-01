@@ -1,4 +1,4 @@
-import { Container, Stack, Title, Text, Card, Button, Group, Avatar, Badge } from '@mantine/core'
+import { Container, Stack, Title, Text, Card, Group, Avatar, Badge, Image } from '@mantine/core'
 
 export default function Home({ posts = [] }) {
   return (
@@ -11,14 +11,27 @@ export default function Home({ posts = [] }) {
           {posts.map((post) => (
             <Card key={post.id} withBorder radius="md" p="md">
               <Group align="flex-start">
-                <Avatar src={post.author.avatar} radius="xl" />
+                <Avatar 
+                  src={post.author?.profile_picture} 
+                  radius="xl" 
+                />
                 <Stack gap={2} style={{ flex: 1 }}>
                   <Group gap={6}>
-                    <Text fw={600}>{post.author.name}</Text>
-                    <Text c="dimmed">@{post.author.handle}</Text>
-                    <Badge variant="light">{post.teamId}</Badge>
+                    <Text fw={600}>
+                      {post.author?.first_name} {post.author?.last_name}
+                    </Text>
+                    {post.author?.username && (
+                      <Text c="dimmed">@{post.author?.username}</Text>
+                    )}
+                    {post.team_id && <Badge variant="light">{post.team_id}</Badge>}
                   </Group>
                   <Text style={{ whiteSpace: 'pre-wrap' }}>{post.content}</Text>
+                  {post.image && (
+                    <Image src={post.image} alt="attachment" radius="sm" w={320} />
+                  )}
+                  <Text size="xs" c="dimmed">
+                    {new Date(post.createdAt).toLocaleDateString()}
+                  </Text>
                 </Stack>
               </Group>
             </Card>

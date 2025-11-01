@@ -30,7 +30,7 @@ export default function Onboarding() {
       .then(response => {
         const teamOptions = response.data.map(team => ({
           value: team.id.toString(),
-          label: team.department
+          label: `${team.department} - ${team.id}`
         }))
         setTeams(teamOptions)
         setLoadingTeams(false)
