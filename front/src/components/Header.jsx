@@ -206,7 +206,7 @@ export default function Header() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Box p="md">
+        <Box p={activeView === "Chat" ? 0 : "md"}>
           {activeView === "Chat" ? (
             <Chat user={user} />
           ) : (

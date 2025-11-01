@@ -13,10 +13,9 @@ import {
   ActionIcon,
   Loader,
   Center,
-  Modal,
-  Input
+  Switch
 } from '@mantine/core';
-import { IconSend, IconArrowLeft, IconPlus, IconSearch } from '@tabler/icons-react';
+import { IconSend, IconArrowLeft } from '@tabler/icons-react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 
@@ -30,10 +29,8 @@ export default function Chat({ user }) {
   const [socket, setSocket] = useState(null);
   const [loading, setLoading] = useState(false);
   const [typingUsers, setTypingUsers] = useState(new Set());
-  const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
-  const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [teamOnly, setTeamOnly] = useState(false);
   const scrollRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -52,7 +49,23 @@ export default function Chat({ user }) {
     });
 
     socketIo.on('message:new', (message) => {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        // If we have an optimistic temp message, replace it
+        const tempIndex = prev.findIndex((m) => 
+          String(m.id).startsWith('temp-') &&
+          m.conversationId === message.conversationId &&
+          m.senderId === message.senderId &&
+          m.content === message.content
+        );
+        if (tempIndex !== -1) {
+          const next = prev.slice();
+          next[tempIndex] = message;
+          return next;
+        }
+        // Otherwise, append if not already present
+        const exists = prev.some((m) => m.id === message.id);
+        return exists ? prev : [...prev, message];
+      });
       
       // Update conversation list with new message
       setConversations(prev => {
@@ -131,22 +144,14 @@ export default function Chat({ user }) {
 
   // Load all users for new chat
   const loadUsers = async () => {
-    setLoadingUsers(true);
     try {
-      console.log('Loading users from:', `${API_URL}/api/user/`);
       const response = await axios.get(`${API_URL}/api/user/`, {
         withCredentials: true
       });
-      console.log('Users response:', response.data);
-      // Filter out current user
       const otherUsers = response.data.filter(u => u.id !== user.id);
-      console.log('Filtered users (excluding self):', otherUsers);
       setAllUsers(otherUsers);
     } catch (error) {
       console.error('Error loading users:', error);
-      console.error('Error details:', error.response?.data);
-    } finally {
-      setLoadingUsers(false);
     }
   };
 
@@ -166,21 +171,14 @@ export default function Chat({ user }) {
       });
       
       setSelectedConversation(response.data);
-      setShowNewChatModal(false);
-      setUserSearchQuery('');
     } catch (error) {
       console.error('Error starting conversation:', error);
     }
   };
 
-  const filteredUsers = allUsers.filter(u => {
-    const fullName = `${u.first_name} ${u.last_name}`.toLowerCase();
-    const username = (u.username || '').toLowerCase();
-    const query = userSearchQuery.toLowerCase();
-    return fullName.includes(query) || username.includes(query);
-  });
+  // Users list is shown directly with optional team filter
 
-  // Load messages when conversation is selected
+  // Load messages once when conversation is selected (no polling)
   useEffect(() => {
     if (!selectedConversation || !socket) return;
 
@@ -192,10 +190,6 @@ export default function Chat({ user }) {
           { withCredentials: true }
         );
         setMessages(response.data);
-        
-        // Join conversation room
-        socket.emit('conversation:join', selectedConversation.id);
-
         setTimeout(() => {
           if (scrollRef.current) {
             scrollRef.current.scrollTo({ 
@@ -211,9 +205,11 @@ export default function Chat({ user }) {
       }
     };
 
+    // Join room and initial load
+    socket.emit('conversation:join', selectedConversation.id);
     loadMessages();
 
-    // Cleanup: leave conversation room when switching
+    // Cleanup on conversation change
     return () => {
       if (socket) {
         socket.emit('conversation:leave', selectedConversation.id);
@@ -221,16 +217,92 @@ export default function Chat({ user }) {
     };
   }, [selectedConversation, socket]);
 
+  // Background refresh messages every second without showing a loader
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    const poll = async () => {
+      try {
+        const response = await axios.get(
+          `${API_URL}/api/messages/conversations/${selectedConversation.id}/messages`,
+          { withCredentials: true }
+        );
+        const next = Array.isArray(response.data) ? response.data : [];
+
+        setMessages((prev) => {
+          // Preserve optimistic temp messages
+          const temp = prev.filter((m) => String(m.id).startsWith('temp-'));
+
+          // If nothing changed (quick check by length and last id), skip
+          const prevReal = prev.filter((m) => !String(m.id).startsWith('temp-'));
+          const prevLen = prevReal.length;
+          const nextLen = next.length;
+          const prevLast = prevReal.at(-1)?.id;
+          const nextLast = next.at(-1)?.id;
+          if (prevLen === nextLen && prevLast === nextLast) return prev;
+
+          // Maintain scroll near-bottom behavior
+          const viewport = scrollRef.current;
+          const nearBottom = viewport
+            ? viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 40
+            : false;
+
+          const updated = [...next, ...temp];
+
+          if (nearBottom && viewport) {
+            queueMicrotask(() => {
+              viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'instant' });
+            });
+          }
+
+          return updated;
+        });
+      } catch (e) {
+        // silent
+      }
+    };
+
+    const id = setInterval(poll, 1000);
+    return () => clearInterval(id);
+  }, [selectedConversation]);
+
   const sendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !socket || !selectedConversation) return;
 
+    const content = newMessage.trim();
+    // Optimistic message
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      conversationId: selectedConversation.id,
+      senderId: user.id,
+      content,
+      createdAt: new Date().toISOString(),
+      sender: {
+        id: user.id,
+        first_name: user.first_name || user.firstName || '',
+        last_name: user.last_name || user.lastName || '',
+        profile_picture: user.profile_picture || user.picture || ''
+      }
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
+    setNewMessage('');
+
+    // Scroll after optimistic append
+    if (scrollRef.current) {
+      setTimeout(() => {
+        scrollRef.current.scrollTo({ 
+          top: scrollRef.current.scrollHeight, 
+          behavior: 'smooth' 
+        });
+      }, 10);
+    }
+
     socket.emit('message:send', {
       conversationId: selectedConversation.id,
-      content: newMessage.trim()
+      content
     });
-
-    setNewMessage('');
     
     // Stop typing indicator
     if (typingTimeoutRef.current) {
@@ -299,11 +371,11 @@ export default function Chat({ user }) {
 
   return (
     <>
-      <Paper shadow="xs" p={0} style={{ height: '600px', display: 'flex' }}>
+      <Paper shadow="xs" p={0} style={{ height: '600px', display: 'flex', width: '100%' }}>
         {/* Conversations List */}
         <Box 
           style={{ 
-            width: selectedConversation ? '300px' : '100%',
+            width: selectedConversation ? '240px' : '100%',
             borderRight: selectedConversation ? '1px solid var(--mantine-color-gray-3)' : 'none',
             display: 'flex',
             flexDirection: 'column'
@@ -311,17 +383,6 @@ export default function Chat({ user }) {
         >
           <Group justify="space-between" p="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
             <Text size="lg" fw={600}>Messages</Text>
-            <ActionIcon 
-              variant="filled" 
-              color="blue" 
-              radius="xl"
-              onClick={() => {
-                setShowNewChatModal(true);
-                loadUsers();
-              }}
-            >
-              <IconPlus size={18} />
-            </ActionIcon>
           </Group>
         
         <ScrollArea style={{ flex: 1 }}>
@@ -366,9 +427,13 @@ export default function Chat({ user }) {
               </Box>
             ))
           )}
-          <Divider my="sm" label="All Users" labelPosition="center" />
+          <Divider my="sm" label="Users" labelPosition="center" />
+          <Group justify="space-between" px="md" pb="xs">
+            <Text size="xs" c="dimmed">My team only</Text>
+            <Switch size="xs" checked={teamOnly} onChange={(e) => setTeamOnly(e.currentTarget.checked)} />
+          </Group>
           <Stack gap={0}>
-            {allUsers.map((u) => (
+            {(teamOnly ? allUsers.filter(u => u.team_id === user.teamId) : allUsers).map((u) => (
               <Box
                 key={u.id}
                 p="md"
@@ -523,76 +588,7 @@ export default function Chat({ user }) {
       )}
       </Paper>
 
-      {/* New Chat Modal */}
-      <Modal
-        opened={showNewChatModal}
-        onClose={() => {
-          setShowNewChatModal(false);
-          setUserSearchQuery('');
-        }}
-        title="Start a new conversation"
-        size="md"
-      >
-        <Stack gap="md">
-          <Input
-            placeholder="Search users..."
-            leftSection={<IconSearch size={16} />}
-            value={userSearchQuery}
-            onChange={(e) => setUserSearchQuery(e.target.value)}
-          />
-          
-          <ScrollArea h={300}>
-            {loadingUsers ? (
-              <Center h={300}>
-                <Loader size="sm" />
-              </Center>
-            ) : (
-              <Stack gap="xs">
-                {filteredUsers.length === 0 ? (
-                  <Center p="xl">
-                    <Text c="dimmed" size="sm">
-                      {allUsers.length === 0 ? 'No users available' : 'No users found'}
-                    </Text>
-                  </Center>
-                ) : (
-                  filteredUsers.map((u) => (
-                    <Box
-                      key={u.id}
-                      p="sm"
-                      style={{
-                        cursor: 'pointer',
-                        borderRadius: '8px',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onClick={() => startNewConversation(u)}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-1)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <Group gap="sm">
-                        <Avatar 
-                          src={u.profile_picture} 
-                          radius="xl" 
-                          size="md" 
-                        />
-                        <Box>
-                          <Text size="sm" fw={500}>
-                            {u.first_name} {u.last_name}
-                          </Text>
-                          {u.username && (
-                            <Text size="xs" c="dimmed">
-                              @{u.username}
-                            </Text>
-                          )}
-                        </Box>
-                      </Group>
-                    </Box>
-                  ))
-                )}
-              </Stack>
-            )}
-          </ScrollArea>
-        </Stack>
-      </Modal>
+      {/* No modal; start conversations from Users list */}
     </>
   );
 }
