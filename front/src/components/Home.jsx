@@ -199,7 +199,6 @@ function PostCard({ post, onToggleLike, onToggleBookmark }) {
 
       {post.image && (
         <Box mt="sm" style={{ overflow: 'hidden', borderRadius: rem(12) }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={post.image} alt="post" style={{ width: '100%', display: 'block' }} />
         </Box>
       )}
@@ -401,7 +400,7 @@ function ProfilePage() {
 }
 
 export default function MantineSocialFeed() {
-  const [colorScheme, setColorScheme] = useLocalStorage({ key: 'theme', defaultValue: 'light' });
+  const [colorScheme] = useLocalStorage({ key: 'theme', defaultValue: 'light' });
   const [page, setPage] = useState('home');
   const [posts, setPosts] = useState(initialPosts);
 

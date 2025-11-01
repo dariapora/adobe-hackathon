@@ -1,11 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Container, Paper, Title, Text, Stack, Divider, Grid, TextInput, Group, Button, Center } from '@mantine/core'
 import { useForm } from '@mantine/form'
+import { useNavigate } from 'react-router-dom'
 
 export default function Login({ onLogin }) {
-  const [isAuthed, setIsAuthed] = useState(() => (
+  const navigate = useNavigate()
+
+  const [isAuthed] = useState(() => (
     import.meta.env.VITE_BYPASS_AUTH === '1' || import.meta.env.VITE_BYPASS_AUTH === 'true'
   ))
+
+  const bypass = import.meta.env.VITE_BYPASS_AUTH === '1' || import.meta.env.VITE_BYPASS_AUTH === 'true'
+
+  useEffect(() => {
+    // If bypass auth is enabled at build time, immediately notify parent to proceed to home
+    if (bypass) {
+      if (typeof onLogin === 'function') onLogin({})
+      navigate('/home', { replace: true })
+    }
+    // only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const form = useForm({
     initialValues: {
@@ -27,12 +42,13 @@ export default function Login({ onLogin }) {
   const handleSubmit = (values) => {
     // Submit values to backend or proceed to app
     // For now, simply log
-    // eslint-disable-next-line no-console
     console.log('Sign-up values', values);
     // Notify parent (App) that login/profile completed
     if (typeof onLogin === 'function') {
       onLogin(values)
     }
+    // navigate to home
+    navigate('/home', { replace: true })
   }
 
   return (
@@ -51,7 +67,14 @@ export default function Login({ onLogin }) {
                 Sign in with Google
               </Button>
               <Group>
-                <Button variant="light" color="checkin" onClick={() => setIsAuthed(true)}>
+                <Button
+                  variant="light"
+                  color="checkin"
+                  onClick={() => {
+                    if (typeof onLogin === 'function') onLogin({})
+                    navigate('/home', { replace: true })
+                  }}
+                >
                   Skip for now
                 </Button>
               </Group>

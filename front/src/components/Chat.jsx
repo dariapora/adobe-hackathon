@@ -226,12 +226,13 @@ const mockMessagesByConversation = {
   ],
 };
 
-export function Chat() {
+export function Chat({ floating = true, height }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const contentHeight = height ?? (floating ? 500 : 600);
 
   const handleSelectChat = (conversation) => {
     setSelectedChat(conversation);
@@ -271,14 +272,14 @@ export function Chat() {
 
   return (
     <Box
-      style={{
+      style={floating ? {
         position: 'fixed',
         bottom: 20,
         right: 20,
         zIndex: 1000,
-      }}
+      } : {}}
     >
-      <Paper shadow="lg" radius="md" withBorder w={350}>
+      <Paper shadow="lg" radius="md" withBorder w={floating ? 350 : '100%'}>
         {/* Header */}
         <Group justify="space-between" p="md" style={{ borderBottom: '1px solid #e9ecef' }}>
           <Group gap="xs">
@@ -299,7 +300,7 @@ export function Chat() {
 
         {/* Content */}
         <Collapse in={isExpanded}>
-          <Box h={500}>
+          <Box h={contentHeight}>
           {!selectedChat ? (
             // Conversation List View
             <Stack gap={0}>
