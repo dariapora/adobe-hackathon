@@ -1,6 +1,41 @@
-const { Post, User, Team } = require('../models/index');
+const { Post, User, Team, PostLike } = require('../models/index');
+const fs = require('fs');
+const path = require('path');
 
 const Controller = {
+    uploadImage: async (req, res) => {
+        try {
+            const { dataUrl, fileName } = req.body;
+            if (!dataUrl || typeof dataUrl !== 'string') {
+                return res.status(400).json({ error: 'dataUrl is required' });
+            }
+
+            const match = dataUrl.match(/^data:(.+);base64,(.+)$/);
+            if (!match) {
+                return res.status(400).json({ error: 'Invalid data URL' });
+            }
+            const mime = match[1];
+            const base64 = match[2];
+            const buffer = Buffer.from(base64, 'base64');
+
+            let ext = '.bin';
+            if (mime === 'image/png') ext = '.png';
+            else if (mime === 'image/jpeg' || mime === 'image/jpg') ext = '.jpg';
+            else if (mime === 'image/gif') ext = '.gif';
+
+            const safeName = (fileName || 'upload').replace(/[^a-zA-Z0-9-_]/g, '');
+            const fileBase = `${Date.now()}-${safeName}${ext}`;
+            const filePath = path.join(__dirname, '..', 'uploads', fileBase);
+            fs.writeFileSync(filePath, buffer);
+
+            const baseUrl = `${req.protocol}://${req.get('host')}`;
+            const url = `${baseUrl}/uploads/${fileBase}`;
+            return res.status(201).json({ url, file: `/uploads/${fileBase}` });
+        } catch (err) {
+            console.error('uploadImage error:', err);
+            return res.status(500).json({ error: 'Failed to upload image' });
+        }
+    },
     createPost: async (req, res) => {
         try {
             const { user_id, content, image, team_id, visibility } = req.body;
@@ -104,6 +139,38 @@ const Controller = {
             res.status(200).json(posts);
         } catch (err) {
             res.status(500).json({ error: err.message });
+        }
+    },
+
+    likePost: async (req, res) => {
+        try {
+            const { id } = req.params;
+            if (!req.isAuthenticated || !req.isAuthenticated()) {
+                return res.status(401).json({ error: 'Not authenticated' });
+            }
+            const userId = req.user.id;
+
+            const post = await Post.findByPk(id);
+            if (!post) return res.status(404).json({ error: 'Post not found' });
+
+            // toggle like
+            const existing = await PostLike.findOne({ where: { postId: id, userId } });
+            if (existing) {
+                await existing.destroy();
+                if ((post.likes || 0) > 0) {
+                    await post.decrement('likes', { by: 1 });
+                }
+                await post.reload();
+                return res.status(200).json({ id: post.id, likes: post.likes, liked: false });
+            } else {
+                await PostLike.create({ postId: id, userId });
+                await post.increment('likes', { by: 1 });
+                await post.reload();
+                return res.status(200).json({ id: post.id, likes: post.likes, liked: true });
+            }
+        } catch (err) {
+            console.error('Error liking post:', err);
+            return res.status(500).json({ error: 'Failed to like post' });
         }
     }
 };

@@ -2,6 +2,7 @@ const sequelize = require('../config/db');
 const User = require('./userModel');
 const Team = require("./teamModel");
 const Post = require("./postModel");
+const PostLike = require("./postLikeModel");
 const Event = require("./eventModel");
 const Conversation = require('./conversationModel');
 const Message = require('./messageModel');
@@ -58,6 +59,13 @@ Message.belongsTo(User, {
     as: 'sender'
 });
 
+// Post likes relationships
+Post.hasMany(PostLike, { foreignKey: 'postId', as: 'likesList', onDelete: 'CASCADE' });
+PostLike.belongsTo(Post, { foreignKey: 'postId', as: 'post' });
+
+User.hasMany(PostLike, { foreignKey: 'userId', as: 'postLikes', onDelete: 'CASCADE' });
+PostLike.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // Note: team_id is just a string identifier, not a foreign key to teams table
 // Users and Posts just store team_id as a string (e.g., "T-125", "Engineering")
 
@@ -66,6 +74,7 @@ module.exports = {
     User,
     Team,
     Post,
+    PostLike,
     Event,
     Conversation,
     Message

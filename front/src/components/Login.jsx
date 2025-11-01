@@ -36,12 +36,6 @@ export default function Login() {
           >
             Sign in with Google
           </Button>
-
-          <Group>
-            <Button variant="light" onClick={handleBypass}>
-              Demo Mode
-            </Button>
-          </Group>
         </Stack>
       </Paper>
     </Container>

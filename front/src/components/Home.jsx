@@ -1,4 +1,5 @@
-import { Container, Stack, Title, Text, Card, Group, Avatar, Badge, Image } from '@mantine/core'
+import { Container, Stack, Title, Text, Card, Group, Avatar, Badge, Image, ActionIcon } from '@mantine/core'
+import { IconHeart, IconHeartFilled } from '@tabler/icons-react'
 
 function getBadgeForXp(xp = 0) {
   if (xp >= 1000) return { label: 'Legend', color: 'grape' };
@@ -8,7 +9,7 @@ function getBadgeForXp(xp = 0) {
   return { label: 'Intern', color: 'gray' };
 }
 
-export default function Home({ posts = [] }) {
+export default function Home({ posts = [], onLike }) {
   return (
     <Container size="xl">
       <Stack my="md" gap="md">
@@ -38,8 +39,21 @@ export default function Home({ posts = [] }) {
                   </Group>
                   <Text style={{ whiteSpace: 'pre-wrap' }}>{post.content}</Text>
                   {post.image && (
-                    <Image src={post.image} alt="attachment" radius="sm" w={320} />
+                    <Image 
+                      src={post.image} 
+                      alt="attachment" 
+                      radius="sm" 
+                      style={{ maxWidth: 720, width: '100%', height: 'auto' }}
+                    />
                   )}
+              <Group justify="space-between" mt="xs">
+                <Group gap={6}>
+                  <ActionIcon variant="subtle" onClick={() => onLike && onLike(post.id)}>
+                    {post.__liked ? <IconHeartFilled size={18} color="red" /> : <IconHeart size={18} />}
+                  </ActionIcon>
+                  <Text size="sm" c="dimmed">{post.likes || 0}</Text>
+                </Group>
+              </Group>
                   <Text size="xs" c="dimmed">
                     {new Date(post.createdAt).toLocaleDateString()}
                   </Text>

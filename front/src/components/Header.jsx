@@ -6,6 +6,7 @@ import Home from "./Home";
 import Team from "./Team"; 
 import Chat from "./Chat";
 import Schedule from "./Schedule";
+import Pomodoro from "./Pomodoro";
 import Experience from "./Experience";
 import { initialPosts } from "../data/posts";
 import Nav from "./Nav.jsx";
@@ -80,6 +81,9 @@ export default function Header() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerText, setComposerText] = useState("");
   const [composerScope, setComposerScope] = useState('all');
+  const [composerImageFile, setComposerImageFile] = useState(null);
+  const [composerImagePreview, setComposerImagePreview] = useState("");
+  const [composerUploading, setComposerUploading] = useState(false);
 
   const handleNavSelect = (label) => {
     // Route all navigation from left sidebar
@@ -112,6 +116,11 @@ export default function Header() {
       setComposerOpen(false);
       return;
     }
+    if (label === "Pomodoro") {
+      setActiveView("Pomodoro");
+      setComposerOpen(false);
+      return;
+    }
   };
 
   const handleAddPost = () => {
@@ -125,10 +134,32 @@ export default function Header() {
     try {
       const isTeamPost = composerScope === 'team';
       const teamIdToSend = isTeamPost ? user.teamId : null;
+      let imageUrl = null;
+
+      if (composerImageFile) {
+        setComposerUploading(true);
+        // Convert to data URL
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(composerImageFile);
+        });
+        try {
+          const up = await axios.post(
+            `${apiUrl}/api/post/upload-image`,
+            { dataUrl, fileName: composerImageFile.name || 'image' },
+            { withCredentials: true }
+          );
+          imageUrl = up.data?.url || up.data?.file || null;
+        } finally {
+          setComposerUploading(false);
+        }
+      }
       const postData = {
         user_id: user.id,
         content: text,
-        image: null,
+        image: imageUrl,
         team_id: teamIdToSend,
         visibility: isTeamPost ? 'team' : 'all'
       };
@@ -143,23 +174,47 @@ export default function Header() {
 
       console.log('Post created successfully:', response.data);
 
-      // Refresh posts list based on current tab
-      // Re-fetch and apply same filtering rules
-      const url = `${apiUrl}/api/post/`;
-      const postsResponse = await axios.get(url, { withCredentials: true });
-      const allData = Array.isArray(postsResponse.data) ? postsResponse.data : [];
-      const next = activeTab === 'team'
-        ? allData.filter((p) => p.team_id && p.team_id === user.teamId)
-        : allData.filter((p) => p.team_id == null);
-      setPosts(next);
+      // Optimistically inject the new post if it belongs in the current tab
+      const created = response.data;
+      const shouldShow = activeTab === 'team'
+        ? !!created.team_id && created.team_id === user.teamId
+        : created.team_id == null;
+      if (shouldShow) {
+        setPosts((prev) => [created, ...prev]);
+      }
+
+      // Re-fetch to reconcile with server ordering and ensure persistence
+      try {
+        const url = `${apiUrl}/api/post/`;
+        const postsResponse = await axios.get(url, { withCredentials: true });
+        const allData = Array.isArray(postsResponse.data) ? postsResponse.data : [];
+        const next = activeTab === 'team'
+          ? allData.filter((p) => p.team_id && p.team_id === user.teamId)
+          : allData.filter((p) => p.team_id == null);
+        setPosts(next);
+      } catch (e) {
+        // ignore
+      }
       
       setComposerText("");
       setComposerScope('all');
+      setComposerImageFile(null);
+      setComposerImagePreview("");
       setComposerOpen(false);
     } catch (error) {
       console.error('Error creating post:', error);
       console.error('Error response:', error.response?.data);
       alert('Failed to create post. Please try again.');
+    }
+  };
+
+  const handleLike = async (postId) => {
+    try {
+      const res = await axios.post(`${apiUrl}/api/post/${postId}/like`, {}, { withCredentials: true });
+      const { likes, liked } = res.data || {};
+      setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, likes: likes ?? p.likes, __liked: liked } : p));
+    } catch (e) {
+      // no-op
     }
   };
 
@@ -213,6 +268,8 @@ export default function Header() {
         <Box p={activeView === "Chat" ? 0 : "md"}>
           {activeView === "Chat" ? (
             <Chat user={user} />
+          ) : activeView === "Pomodoro" ? (
+            <Pomodoro />
           ) : (
             <>
               {composerOpen && activeTab !== 'experience' && (
@@ -231,15 +288,37 @@ export default function Header() {
                       value={composerText}
                       onChange={(e) => setComposerText(e.currentTarget.value)}
                     />
+                    <Group gap="sm">
+                      <input
+                        id="composer-image-input"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.currentTarget.files?.[0] || null;
+                          setComposerImageFile(file);
+                          setComposerImagePreview(file ? URL.createObjectURL(file) : "");
+                        }}
+                      />
+                      <Button variant="light" onClick={() => document.getElementById('composer-image-input').click()}>
+                        {composerImageFile ? 'Change photo' : 'Add photo'}
+                      </Button>
+                      {composerImageFile && (
+                        <Text size="sm" c="dimmed">{composerImageFile.name}</Text>
+                      )}
+                    </Group>
+                    {composerImagePreview && (
+                      <Image src={composerImagePreview} alt="preview" radius="sm" w={320} />
+                    )}
                     <Group justify="flex-end">
                       <Button variant="light" onClick={() => setComposerOpen(false)}>Cancel</Button>
-                      <Button color="checkin" onClick={submitPost}>Post</Button>
+                      <Button color="checkin" onClick={submitPost} loading={composerUploading}>Post</Button>
                     </Group>
                   </Stack>
                 </Card>
               )}
-              {activeTab === "home" && <Home posts={posts} />}
-              {activeTab === "team" && <Team posts={posts} user={user} />}
+              {activeTab === "home" && <Home posts={posts} onLike={handleLike} />}
+              {activeTab === "team" && <Team posts={posts} user={user} onLike={handleLike} />}
               {activeTab === "experience" && <Experience user={user} />}
               {activeTab === "schedule" && <Schedule user={user} />}
             </>

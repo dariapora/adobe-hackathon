@@ -7,6 +7,7 @@ const data = [
   { label: 'Experience' },
   { label: 'Chat' },
   { label: 'Schedule' },
+  { label: 'Pomodoro' },
 ];
 
 export default function Nav({ onAddPost, onSelect }) {

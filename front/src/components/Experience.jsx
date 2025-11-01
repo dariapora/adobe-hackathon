@@ -71,7 +71,6 @@ export default function Experience({ user }) {
       <Stack my="md" gap="md">
         <Title order={2}>Experience</Title>
 
-        {/* Current user card */}
         <Card withBorder radius="md" p="md">
           <Group>
             <Avatar src={currentUser?.picture} radius="xl" size="lg" />
@@ -93,7 +92,6 @@ export default function Experience({ user }) {
           </Group>
         </Card>
 
-        {/* Monthly Top XP */}
         <Card withBorder radius="md" p="md">
           <Group justify="space-between" mb="sm">
             <Text fw={600}>Top XP This Month</Text>
@@ -124,7 +122,6 @@ export default function Experience({ user }) {
           </Stack>
         </Card>
 
-        {/* Mock achievements list */}
         <Card withBorder radius="md" p="md">
           <Text fw={600} mb="xs">Achievements</Text>
           <Group>
