@@ -15,7 +15,7 @@ passport.use(
                 let user = await User.findOne({ where: { google_id: profile.id } });
                 
                 if (!user) {
-                    // Create new user
+                    // Create new user (role and team_id will be set during onboarding)
                     user = await User.create({
                         google_id: profile.id,
                         email: profile.emails[0].value,
@@ -23,7 +23,8 @@ passport.use(
                         name: profile.displayName,
                         profile_picture: profile.photos[0]?.value || null,
                         hd_domain: profile._json.hd || null,
-                        role: 'user' // default role
+                        role: null,
+                        team_id: null
                     });
                 }
                 
