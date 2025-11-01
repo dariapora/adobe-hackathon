@@ -1,4 +1,5 @@
-const { Post, User, Team, PostLike } = require('../models/index');
+const { Post, User, Team, PostLike, Comment } = require('../models/index');
+const { Op, fn, col } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 
@@ -91,7 +92,7 @@ const Controller = {
             // If team_id provided, get posts for that team OR public posts
             if (team_id) {
                 whereClause = {
-                    [require('sequelize').Op.or]: [
+                    [Op.or]: [
                         { team_id: team_id },
                         { team_id: null }  // Include public posts
                     ]
@@ -100,13 +101,23 @@ const Controller = {
 
             const posts = await Post.findAll({
                 where: whereClause,
+                attributes: {
+                    include: [[fn('COUNT', col('comments.id')), 'commentsCount']]
+                },
                 include: [
                     {
                         model: User,
                         as: 'author',
                         attributes: ['id', 'first_name', 'last_name', 'username', 'profile_picture', 'experience']
+                    },
+                    {
+                        model: Comment,
+                        as: 'comments',
+                        attributes: [],
+                        required: false
                     }
                 ],
+                group: ['posts.id', 'author.id'],
                 order: [['createdAt', 'DESC']]
             });
 
@@ -126,13 +137,23 @@ const Controller = {
 
             const posts = await Post.findAll({
                 where: { team_id },
+                attributes: {
+                    include: [[fn('COUNT', col('comments.id')), 'commentsCount']]
+                },
                 include: [
                     {
                         model: User,
                         as: 'author',
                         attributes: ['id', 'first_name', 'last_name', 'username', 'profile_picture', 'experience']
+                    },
+                    {
+                        model: Comment,
+                        as: 'comments',
+                        attributes: [],
+                        required: false
                     }
                 ],
+                group: ['posts.id', 'author.id'],
                 order: [['createdAt', 'DESC']]
             });
 

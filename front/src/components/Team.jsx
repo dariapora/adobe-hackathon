@@ -1,5 +1,5 @@
 import { Container, Stack, Title, Text, Card, Group, Avatar, Badge, Image, ActionIcon, Button, TextInput } from '@mantine/core'
-import { IconHeart, IconHeartFilled } from '@tabler/icons-react'
+import { IconHeart, IconHeartFilled, IconMessageCircle } from '@tabler/icons-react'
 import { useState } from 'react'
 import axios from 'axios'
 
@@ -17,17 +17,33 @@ export default function Team({ posts = [], user, onLike }) {
   const [openCommentsFor, setOpenCommentsFor] = useState(null)
   const [commentsByPost, setCommentsByPost] = useState({})
   const [newComment, setNewComment] = useState("")
+  const [department, setDepartment] = useState("")
+
+  // Fetch department name for this team id
+  useState(() => {
+    if (!teamId) return
+    ;(async () => {
+      try {
+        const res = await axios.get(`${apiUrl}/api/team`, { withCredentials: true })
+        const teams = Array.isArray(res.data) ? res.data : []
+        const t = teams.find((t) => String(t.id) === String(teamId))
+        setDepartment(t?.department || "")
+      } catch (e) {
+        setDepartment("")
+      }
+    })()
+  }, [teamId, apiUrl])
   
   // Posts are already filtered from backend, just display them
   return (
     <Container size="lg">
       <Stack my="md" gap="md">
         <Title order={2}>Team</Title>
-        <Text c="dimmed">Posts for your team ({teamId || 'unknown'}).</Text>
+        <Text c="dimmed">Department: {department || 'Unknown'} • Team: {teamId || 'unknown'}</Text>
 
         {posts.length === 0 ? (
           <Card withBorder radius="md" p="md">
-            <Text c="dimmed">No posts for this team yet.</Text>
+            <Text c="dimmed">No posts for your team yet. Department: {department || 'Unknown'} • Team: {teamId || 'unknown'}</Text>
           </Card>
         ) : (
           <Stack>
@@ -65,18 +81,23 @@ export default function Team({ posts = [], user, onLike }) {
                         </ActionIcon>
                         <Text size="sm" c="dimmed">{post.likes || 0}</Text>
                       </Group>
-                      <Button variant="subtle" size="xs" onClick={async () => {
-                        const open = openCommentsFor === post.id ? null : post.id
-                        setOpenCommentsFor(open)
-                        if (open && !commentsByPost[post.id]) {
-                          try {
-                            const res = await axios.get(`${apiUrl}/api/comments/post/${post.id}`, { withCredentials: true })
-                            setCommentsByPost((prev) => ({ ...prev, [post.id]: Array.isArray(res.data) ? res.data : [] }))
-                          } catch (e) {
-                            setCommentsByPost((prev) => ({ ...prev, [post.id]: [] }))
+                      <Group gap={6}>
+                        <ActionIcon variant="subtle" onClick={async () => {
+                          const open = openCommentsFor === post.id ? null : post.id
+                          setOpenCommentsFor(open)
+                          if (open && !commentsByPost[post.id]) {
+                            try {
+                              const res = await axios.get(`${apiUrl}/api/comments/post/${post.id}`, { withCredentials: true })
+                              setCommentsByPost((prev) => ({ ...prev, [post.id]: Array.isArray(res.data) ? res.data : [] }))
+                            } catch (e) {
+                              setCommentsByPost((prev) => ({ ...prev, [post.id]: [] }))
+                            }
                           }
-                        }
-                      }}>Comments</Button>
+                        }}>
+                          <IconMessageCircle size={18} />
+                        </ActionIcon>
+                        <Text size="sm" c="dimmed">{(commentsByPost[post.id]?.length ?? post.commentsCount ?? 0)}</Text>
+                      </Group>
                     </Group>
                     {openCommentsFor === post.id && (
                       <Stack gap={6} mt="xs">

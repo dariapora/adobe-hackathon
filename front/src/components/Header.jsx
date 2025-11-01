@@ -124,7 +124,10 @@ export default function Header() {
   };
 
   const handleAddPost = () => {
-    setComposerScope(activeTab === 'team' ? 'team' : 'all');
+    // Redirect to the Home view and open the composer
+    setActiveView("Home");
+    setActiveTab("home");
+    setComposerScope('all');
     setComposerOpen(true);
   };
   const submitPost = async () => {

@@ -1,5 +1,5 @@
 import { Container, Stack, Title, Text, Card, Group, Avatar, Badge, Image, ActionIcon, Button, TextInput } from '@mantine/core'
-import { IconHeart, IconHeartFilled } from '@tabler/icons-react'
+import { IconHeart, IconHeartFilled, IconMessageCircle } from '@tabler/icons-react'
 import { useState } from 'react'
 import axios from 'axios'
 
@@ -59,18 +59,23 @@ export default function Home({ posts = [], onLike }) {
                   </ActionIcon>
                   <Text size="sm" c="dimmed">{post.likes || 0}</Text>
                 </Group>
-                <Button variant="subtle" size="xs" onClick={async () => {
-                  const open = openCommentsFor === post.id ? null : post.id
-                  setOpenCommentsFor(open)
-                  if (open && !commentsByPost[post.id]) {
-                    try {
-                      const res = await axios.get(`${apiUrl}/api/comments/post/${post.id}`, { withCredentials: true })
-                      setCommentsByPost((prev) => ({ ...prev, [post.id]: Array.isArray(res.data) ? res.data : [] }))
-                    } catch (e) {
-                      setCommentsByPost((prev) => ({ ...prev, [post.id]: [] }))
+                <Group gap={6}>
+                  <ActionIcon variant="subtle" onClick={async () => {
+                    const open = openCommentsFor === post.id ? null : post.id
+                    setOpenCommentsFor(open)
+                    if (open && !commentsByPost[post.id]) {
+                      try {
+                        const res = await axios.get(`${apiUrl}/api/comments/post/${post.id}`, { withCredentials: true })
+                        setCommentsByPost((prev) => ({ ...prev, [post.id]: Array.isArray(res.data) ? res.data : [] }))
+                      } catch (e) {
+                        setCommentsByPost((prev) => ({ ...prev, [post.id]: [] }))
+                      }
                     }
-                  }
-                }}>Comments</Button>
+                  }}>
+                    <IconMessageCircle size={18} />
+                  </ActionIcon>
+                  <Text size="sm" c="dimmed">{(commentsByPost[post.id]?.length ?? post.commentsCount ?? 0)}</Text>
+                </Group>
               </Group>
               {openCommentsFor === post.id && (
                 <Stack gap={6} mt="xs">
