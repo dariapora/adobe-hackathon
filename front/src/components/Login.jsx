@@ -2,14 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Container, Paper, Title, Text, Stack, Button, Group, TextInput } from '@mantine/core'
 import { useForm } from '@mantine/form'
 
-// Simple JWT payload parser (for Google ID token)
 function parseJwt(token) {
   try {
     const payload = token.split('.')[1]
     const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
     return JSON.parse(decodeURIComponent(escape(decoded)))
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error('Failed to parse JWT', e)
     return null
   }
@@ -53,10 +51,7 @@ export default function Login({ onLogin }) {
 
   useEffect(() => {
     if (!scriptReady || !clientId || !googleButtonRef.current) return
-    // eslint-disable-next-line no-undef
     if (window.google && googleButtonRef.current) {
-      // render the Google Sign-In button into our ref
-      // eslint-disable-next-line no-undef
       window.google.accounts.id.initialize({
         client_id: clientId,
         callback: (resp) => {
@@ -71,7 +66,6 @@ export default function Login({ onLogin }) {
               picture: data.picture,
             }
             setGoogleUser(profile)
-            // check stored users
             const users = getStoredUsers()
             if (users[data.email]) {
               setRegisteredUser(users[data.email])
