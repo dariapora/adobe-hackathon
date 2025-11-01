@@ -20,6 +20,7 @@ import {
   Input,
   SegmentedControl,
   ScrollArea,
+  NavLink,
   useMantineColorScheme,
   rem,
 } from '@mantine/core';
@@ -35,8 +36,13 @@ import {
   IconSearch,
   IconPhotoPlus,
   IconSend,
+  IconHome,
+  IconMessage,
+  IconSpeakerphone,
+  IconUser,
 } from '@tabler/icons-react';
 
+// ----- Utilities
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   const intervals = [
@@ -54,6 +60,7 @@ function timeAgo(date) {
   return 'now';
 }
 
+// ----- Fake data
 const initialPosts = [
   {
     id: '1',
@@ -85,7 +92,7 @@ const initialPosts = [
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28),
     tags: ['#infra', '#kudos'],
     content:
-      'Big kudos to @ops for squashing the flaky CI job. Pipelines are finally green again.',
+      'Big kudos to @ops for squashing the flaky CI job. Pipelines are finally green again. 🚦',
     image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1600&auto=format&fit=crop',
     likes: 7,
     comments: 2,
@@ -225,7 +232,7 @@ function PostCard({ post, onToggleLike, onToggleBookmark }) {
   );
 }
 
-function HeaderBar() {
+function HeaderBar({ onSearch }) {
   const [query, setQuery] = useState('');
   return (
     <Group justify="space-between" p="xs">
@@ -238,7 +245,11 @@ function HeaderBar() {
         leftSection={<IconSearch size={16} />}
         placeholder="Search posts, people, tags…"
         value={query}
-        onChange={(e) => setQuery(e.currentTarget.value)}
+        onChange={(e) => {
+          const v = e.currentTarget.value;
+          setQuery(v);
+          onSearch?.(v);
+        }}
         style={{ width: 380, maxWidth: '50vw' }}
       />
 
@@ -265,14 +276,134 @@ function FeedFilters({ value, onChange }) {
   );
 }
 
-export default function MantineSocialFeed() {
-  const [colorScheme, setColorScheme] = useLocalStorage({ key: 'theme', defaultValue: 'light' });
+function Sidebar({ page, setPage }) {
+  return (
+    <Stack p="sm" gap={4}>
+      <NavLink
+        active={page === 'home'}
+        onClick={() => setPage('home')}
+        leftSection={<IconHome size={18} />}
+        label="Home (Feed)"
+      />
+      <NavLink
+        active={page === 'team'}
+        onClick={() => setPage('team')}
+        leftSection={<IconMessage size={18} />}
+        label="Team Chat"
+        description="Channel-style threads"
+      />
+      <NavLink
+        active={page === 'announcements'}
+        onClick={() => setPage('announcements')}
+        leftSection={<IconSpeakerphone size={18} />}
+        label="Project Announcements"
+        description="Releases & updates"
+      />
+      <NavLink
+        active={page === 'profile'}
+        onClick={() => setPage('profile')}
+        leftSection={<IconUser size={18} />}
+        label="Profile"
+      />
+    </Stack>
+  );
+}
+
+// ----- Pages
+function HomeFeed({ posts, onToggleLike, onToggleBookmark, onPost }) {
   const [filter, setFilter] = useState('for-you');
-  const [posts, setPosts] = useState(initialPosts);
 
   const sortedPosts = useMemo(() => {
     return [...posts].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }, [posts]);
+
+  return (
+    <Container size="sm">
+      <Stack gap="md" my="md">
+        <FeedFilters value={filter} onChange={setFilter} />
+        <Composer onPost={onPost} />
+        <Divider label="Featured posts" labelPosition="center" my="sm" />
+        {sortedPosts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            onToggleLike={onToggleLike}
+            onToggleBookmark={onToggleBookmark}
+          />
+        ))}
+      </Stack>
+    </Container>
+  );
+}
+
+function TeamChatPage() {
+  return (
+    <Container size="sm">
+      <Stack my="md">
+        <Text fw={600} size="lg">Team Chat</Text>
+        <Card withBorder>
+          <Text c="dimmed">This is a placeholder. Add a channel list and a messages panel here. You can wire it later to Socket.IO/Supabase.</Text>
+        </Card>
+        <Card withBorder>
+          <Text><Anchor>@alex</Anchor> Shipped the dashboard filters today. 🎉</Text>
+          <Text c="dimmed" size="sm">5m ago</Text>
+        </Card>
+        <Card withBorder>
+          <Text><Anchor>@sara</Anchor> Working on dark mode polish.</Text>
+          <Text c="dimmed" size="sm">1h ago</Text>
+        </Card>
+      </Stack>
+    </Container>
+  );
+}
+
+function AnnouncementsPage() {
+  return (
+    <Container size="sm">
+      <Stack my="md">
+        <Text fw={600} size="lg">Project Announcements</Text>
+        <Card withBorder>
+          <Text fw={500}>Release v1.4.0</Text>
+          <Text c="dimmed" size="sm">New search, shortcuts, bug fixes.</Text>
+        </Card>
+        <Card withBorder>
+          <Text fw={500}>Sprint 28 Retrospective Notes</Text>
+          <Text c="dimmed" size="sm">Wins, risks, and actions linked in Confluence.</Text>
+        </Card>
+      </Stack>
+    </Container>
+  );
+}
+
+function ProfilePage() {
+  return (
+    <Container size="sm">
+      <Stack my="md">
+        <Group>
+          <Avatar size={64} radius="xl" src="https://i.pravatar.cc/100?img=1" />
+          <div>
+            <Text fw={700}>You</Text>
+            <Text c="dimmed">@you • Product Designer</Text>
+          </div>
+        </Group>
+        <Divider my="xs" />
+        <Text c="dimmed">Bio</Text>
+        <Text>Building things people love. Coffee enthusiast. 🧋</Text>
+        <Divider my="xs" />
+        <Group>
+          <Badge>Design</Badge>
+          <Badge>UI</Badge>
+          <Badge>Prototyping</Badge>
+        </Group>
+      </Stack>
+    </Container>
+  );
+}
+
+export default function MantineSocialFeed() {
+  const [colorScheme, setColorScheme] = useLocalStorage({ key: 'theme', defaultValue: 'light' });
+  const [page, setPage] = useState('home');
+  const [posts, setPosts] = useState(initialPosts);
 
   const toggleLike = (id) => {
     setPosts((cur) =>
@@ -290,34 +421,47 @@ export default function MantineSocialFeed() {
 
   const addPost = (newPost) => setPosts((cur) => [newPost, ...cur]);
 
+  const renderPage = () => {
+    switch (page) {
+      case 'home':
+        return (
+          <HomeFeed
+            posts={posts}
+            onToggleLike={toggleLike}
+            onToggleBookmark={toggleBookmark}
+            onPost={addPost}
+          />
+        );
+      case 'team':
+        return <TeamChatPage />;
+      case 'announcements':
+        return <AnnouncementsPage />;
+      case 'profile':
+        return <ProfilePage />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <MantineProvider defaultColorScheme={colorScheme} theme={{ defaultRadius: 'md' }}>
       <ColorSchemeScript />
       <AppShell
         header={{ height: 60 }}
+        navbar={{ width: 260, breakpoint: 'sm' }}
         padding="md"
       >
         <AppShell.Header>
           <HeaderBar />
         </AppShell.Header>
 
+        <AppShell.Navbar>
+          <Sidebar page={page} setPage={setPage} />
+        </AppShell.Navbar>
+
         <AppShell.Main>
           <ScrollArea.Autosize mah="100vh" type="auto">
-            <Container size="sm">
-              <Stack gap="md" my="md">
-                <FeedFilters value={filter} onChange={setFilter} />
-                <Composer onPost={addPost} />
-                <Divider label="Recent" labelPosition="center" my="sm" />
-                {sortedPosts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    onToggleLike={toggleLike}
-                    onToggleBookmark={toggleBookmark}
-                  />
-                ))}
-              </Stack>
-            </Container>
+            {renderPage()}
           </ScrollArea.Autosize>
         </AppShell.Main>
       </AppShell>

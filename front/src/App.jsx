@@ -1,7 +1,7 @@
 import './App.css'
 import '@mantine/core/styles.css';
 import { Auth } from "./components/Auth.jsx";
-import { Home } from "./components/Home.jsx";
+import  Home from "./components/Home.jsx";
 import { createTheme, MantineProvider } from '@mantine/core';
 
 const theme = createTheme({
@@ -10,9 +10,11 @@ const theme = createTheme({
 
 function App() {
 
+
+
   return (
     <MantineProvider theme={theme}>
-      <Auth/>
+      <Home/>
     </MantineProvider>
   )
 }
