@@ -33,6 +33,8 @@ function App() {
     setUser(profile)
   }
 
+
+
   return (
     <MantineProvider theme={theme}>
       {user ? (
