@@ -55,6 +55,11 @@ const User = sequelize.define('users', {
     team_id: {
         type: DataTypes.STRING,  // Changed to STRING to accept "T-125" format
         allowNull: true  // Will be set during onboarding
+    },
+
+    experience: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
     }
 },
     {

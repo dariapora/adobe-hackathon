@@ -4,7 +4,6 @@ import { Group, Image, Tabs, Box, Container, AppShell, Textarea, SegmentedContro
 import axios from "axios";
 import Home from "./Home";
 import Team from "./Team"; 
-import Schedule from "./Schedule";
 import Chat from "./Chat";
 import { initialPosts } from "../data/posts";
 import Nav from "./Nav.jsx";
@@ -83,14 +82,6 @@ export default function Header() {
     setActiveView(label);
     if (label === "Home") {
       setActiveTab("home");
-      setComposerOpen(false);
-    }
-    if (label === "Schedule") {
-      setActiveView("Schedule");
-      setComposerOpen(false);
-    }
-    if (label === "Chat") {
-      setComposerOpen(false);
     }
   };
 
@@ -151,15 +142,6 @@ export default function Header() {
     );
   }
 
-  // Full-screen Schedule view (no header/nav)
-  if (activeView === "Schedule") {
-    return (
-      <Box style={{ height: '100vh', width: '100vw', overflow: 'auto', background: 'var(--mantine-color-body)' }}>
-        <Schedule user={user} />
-      </Box>
-    );
-  }
-
   return (
     <AppShell header={{ height: 60 }} navbar={{ width: 240, breakpoint: 'sm' }} padding="md">
       <AppShell.Header>
@@ -173,14 +155,20 @@ export default function Header() {
               <Group gap="xs">
                 <Image src={logo} alt="Logo" width={32} height={32} radius="sm" />
               </Group>
-              {activeView === 'Home' && (
-                <Tabs value={activeTab} onChange={setActiveTab}>
-                  <Tabs.List>
-                    <Tabs.Tab value="home">Home</Tabs.Tab>
-                    <Tabs.Tab value="team">Team</Tabs.Tab>
-                  </Tabs.List>
-                </Tabs>
-              )}
+              <Tabs value={activeTab} onChange={(value) => {
+                setActiveTab(value);
+                if (value === "chat") {
+                  setActiveView("Chat");
+                } else {
+                  setActiveView("Home");
+                }
+              }}>
+                <Tabs.List>
+                  <Tabs.Tab value="home">Home</Tabs.Tab>
+                  <Tabs.Tab value="team">Team</Tabs.Tab>
+                  <Tabs.Tab value="chat">Chat</Tabs.Tab>
+                </Tabs.List>
+              </Tabs>
               <ActionIcon 
                 variant="subtle" 
                 size="lg" 
@@ -206,7 +194,7 @@ export default function Header() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Box p={activeView === "Chat" ? 0 : "md"}>
+        <Box p="md">
           {activeView === "Chat" ? (
             <Chat user={user} />
           ) : (
@@ -236,7 +224,6 @@ export default function Header() {
               )}
               {activeTab === "home" && <Home posts={posts} />}
               {activeTab === "team" && <Team posts={posts} user={user} />}
-              {activeTab === "schedule" && <Schedule user={user} />}
             </>
           )}
         </Box>

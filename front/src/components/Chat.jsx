@@ -62,12 +62,12 @@ export default function Chat({ user }) {
           next[tempIndex] = message;
           return next;
         }
-        // Otherwise, append if not already present
+
         const exists = prev.some((m) => m.id === message.id);
         return exists ? prev : [...prev, message];
       });
       
-      // Update conversation list with new message
+
       setConversations(prev => {
         const updated = prev.map(conv => {
           if (conv.id === message.conversationId) {
@@ -79,7 +79,7 @@ export default function Chat({ user }) {
           }
           return conv;
         });
-        // Sort by most recent
+
         return updated.sort((a, b) => 
           new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
         );
@@ -122,7 +122,7 @@ export default function Chat({ user }) {
     };
   }, [user?.id]);
 
-  // Load conversations
+
   useEffect(() => {
     if (!user?.id) return;
     
@@ -138,11 +138,11 @@ export default function Chat({ user }) {
     };
 
     loadConversations();
-    // Also load all users for the sidebar list
+
     loadUsers();
   }, [user?.id]);
 
-  // Load all users for new chat
+
   const loadUsers = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/user/`, {
@@ -163,7 +163,7 @@ export default function Chat({ user }) {
         { withCredentials: true }
       );
       
-      // Add to conversations list if not already there
+
       setConversations(prev => {
         const exists = prev.find(c => c.id === response.data.id);
         if (exists) return prev;
@@ -176,9 +176,7 @@ export default function Chat({ user }) {
     }
   };
 
-  // Users list is shown directly with optional team filter
 
-  // Load messages once when conversation is selected (no polling)
   useEffect(() => {
     if (!selectedConversation || !socket) return;
 
@@ -205,11 +203,11 @@ export default function Chat({ user }) {
       }
     };
 
-    // Join room and initial load
+
     socket.emit('conversation:join', selectedConversation.id);
     loadMessages();
 
-    // Cleanup on conversation change
+
     return () => {
       if (socket) {
         socket.emit('conversation:leave', selectedConversation.id);
@@ -217,7 +215,7 @@ export default function Chat({ user }) {
     };
   }, [selectedConversation, socket]);
 
-  // Background refresh messages every second without showing a loader
+
   useEffect(() => {
     if (!selectedConversation) return;
 
@@ -230,10 +228,10 @@ export default function Chat({ user }) {
         const next = Array.isArray(response.data) ? response.data : [];
 
         setMessages((prev) => {
-          // Preserve optimistic temp messages
+
           const temp = prev.filter((m) => String(m.id).startsWith('temp-'));
 
-          // If nothing changed (quick check by length and last id), skip
+
           const prevReal = prev.filter((m) => !String(m.id).startsWith('temp-'));
           const prevLen = prevReal.length;
           const nextLen = next.length;
@@ -241,7 +239,7 @@ export default function Chat({ user }) {
           const nextLast = next.at(-1)?.id;
           if (prevLen === nextLen && prevLast === nextLast) return prev;
 
-          // Maintain scroll near-bottom behavior
+
           const viewport = scrollRef.current;
           const nearBottom = viewport
             ? viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 40
@@ -271,7 +269,6 @@ export default function Chat({ user }) {
     if (!newMessage.trim() || !socket || !selectedConversation) return;
 
     const content = newMessage.trim();
-    // Optimistic message
     const tempMessage = {
       id: `temp-${Date.now()}`,
       conversationId: selectedConversation.id,
@@ -289,7 +286,7 @@ export default function Chat({ user }) {
     setMessages((prev) => [...prev, tempMessage]);
     setNewMessage('');
 
-    // Scroll after optimistic append
+
     if (scrollRef.current) {
       setTimeout(() => {
         scrollRef.current.scrollTo({ 
@@ -304,7 +301,7 @@ export default function Chat({ user }) {
       content
     });
     
-    // Stop typing indicator
+
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
@@ -316,15 +313,15 @@ export default function Chat({ user }) {
 
     if (!socket || !selectedConversation) return;
 
-    // Send typing start
+
     socket.emit('typing:start', selectedConversation.id);
 
-    // Clear existing timeout
+
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Send typing stop after 2 seconds of no typing
+
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit('typing:stop', selectedConversation.id);
     }, 2000);
@@ -372,7 +369,6 @@ export default function Chat({ user }) {
   return (
     <>
       <Paper shadow="xs" p={0} style={{ height: '600px', display: 'flex', width: '100%' }}>
-        {/* Conversations List */}
         <Box 
           style={{ 
             width: selectedConversation ? '240px' : '100%',
@@ -588,7 +584,6 @@ export default function Chat({ user }) {
       )}
       </Paper>
 
-      {/* No modal; start conversations from Users list */}
     </>
   );
 }
