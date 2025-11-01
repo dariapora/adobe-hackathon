@@ -12,7 +12,6 @@ const Team = sequelize.define('teams', {
         type: DataTypes.STRING,
         allowNull: false,
         validate: { notEmpty: true }
-
     }
 },
     {
