@@ -20,7 +20,7 @@ export default function Nav({ onAddPost, onSelect }) {
       leftSection={item.icon ? <item.icon size={16} stroke={1.5} /> : null}
       onClick={() => {
         setActive(index);
-        if (typeof onSelect === 'function') onSelect(item.label);
+        if (onSelect) onSelect(item.label);
       }}
     />
   ));

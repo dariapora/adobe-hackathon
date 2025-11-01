@@ -7,7 +7,7 @@ const Controller = {
             const newTeam = await Team.create({ department })
             res.status(201).json(newTeam)
         } catch (error) {
-            res.status(400).json({ error: error.message })
+            res.status(500).json({ error: error.message })
         }
     },
 

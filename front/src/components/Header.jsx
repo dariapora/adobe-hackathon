@@ -4,6 +4,7 @@ import { Group, Image, Tabs, Box, Container, AppShell, Textarea, SegmentedContro
 import axios from "axios";
 import Home from "./Home";
 import Team from "./Team"; 
+import Chat from "./Chat";
 import { initialPosts } from "../data/posts";
 import Nav from "./Nav.jsx";
 import logo from "../assets/logo.png";
@@ -12,6 +13,7 @@ export default function Header() {
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8090';
   const [activeTab, setActiveTab] = useState("home");
+  const [activeView, setActiveView] = useState("Home");
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -75,6 +77,13 @@ export default function Header() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerText, setComposerText] = useState("");
   const [composerScope, setComposerScope] = useState('all');
+
+  const handleNavSelect = (label) => {
+    setActiveView(label);
+    if (label === "Home") {
+      setActiveTab("home");
+    }
+  };
 
   const handleAddPost = () => {
     setComposerScope(activeTab === 'team' ? 'team' : 'all');
@@ -146,10 +155,18 @@ export default function Header() {
               <Group gap="xs">
                 <Image src={logo} alt="Logo" width={32} height={32} radius="sm" />
               </Group>
-              <Tabs value={activeTab} onChange={setActiveTab}>
+              <Tabs value={activeTab} onChange={(value) => {
+                setActiveTab(value);
+                if (value === "chat") {
+                  setActiveView("Chat");
+                } else {
+                  setActiveView("Home");
+                }
+              }}>
                 <Tabs.List>
                   <Tabs.Tab value="home">Home</Tabs.Tab>
                   <Tabs.Tab value="team">Team</Tabs.Tab>
+                  <Tabs.Tab value="chat">Chat</Tabs.Tab>
                 </Tabs.List>
               </Tabs>
               <ActionIcon 
@@ -172,37 +189,43 @@ export default function Header() {
 
       <AppShell.Navbar>
         <Box p="sm">
-          <Nav onAddPost={handleAddPost} />
+          <Nav onAddPost={handleAddPost} onSelect={handleNavSelect} />
         </Box>
       </AppShell.Navbar>
 
       <AppShell.Main>
         <Box p="md">
-          {composerOpen && (
-            <Card withBorder radius="md" p="md" mb="md">
-              <Stack gap="sm">
-                <Text fw={600}>Create a post</Text>
-                <SegmentedControl
-                  fullWidth
-                  value={composerScope}
-                  onChange={setComposerScope}
-                  data={[{ label: 'Everyone', value: 'all' }, { label: 'Team', value: 'team' }]}
-                />
-                <Textarea
-                  placeholder={composerScope === 'team' ? 'Share an update with your team…' : 'Share an update with everyone…'}
-                  minRows={3}
-                  value={composerText}
-                  onChange={(e) => setComposerText(e.currentTarget.value)}
-                />
-                <Group justify="flex-end">
-                  <Button variant="light" onClick={() => setComposerOpen(false)}>Cancel</Button>
-                  <Button color="checkin" onClick={submitPost}>Post</Button>
-                </Group>
-              </Stack>
-            </Card>
+          {activeView === "Chat" ? (
+            <Chat user={user} />
+          ) : (
+            <>
+              {composerOpen && (
+                <Card withBorder radius="md" p="md" mb="md">
+                  <Stack gap="sm">
+                    <Text fw={600}>Create a post</Text>
+                    <SegmentedControl
+                      fullWidth
+                      value={composerScope}
+                      onChange={setComposerScope}
+                      data={[{ label: 'Everyone', value: 'all' }, { label: 'Team', value: 'team' }]}
+                    />
+                    <Textarea
+                      placeholder={composerScope === 'team' ? 'Share an update with your team…' : 'Share an update with everyone…'}
+                      minRows={3}
+                      value={composerText}
+                      onChange={(e) => setComposerText(e.currentTarget.value)}
+                    />
+                    <Group justify="flex-end">
+                      <Button variant="light" onClick={() => setComposerOpen(false)}>Cancel</Button>
+                      <Button color="checkin" onClick={submitPost}>Post</Button>
+                    </Group>
+                  </Stack>
+                </Card>
+              )}
+              {activeTab === "home" && <Home posts={posts} />}
+              {activeTab === "team" && <Team posts={posts} user={user} />}
+            </>
           )}
-          {activeTab === "home" && <Home posts={posts} />}
-          {activeTab === "team" && <Team posts={posts} user={user} />}
         </Box>
       </AppShell.Main>
     </AppShell>
