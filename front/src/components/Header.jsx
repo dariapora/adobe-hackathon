@@ -23,19 +23,15 @@ export default function Header() {
         const userData = response.data.user;
         
         // Check if user needs to complete onboarding
-        if (!userData.role || !userData.team_id) {
+        if (!userData.username || !userData.team_id) {
           navigate('/onboarding');
         } else {
-          // Parse name into firstName/lastName
-          const nameParts = userData.name?.split(' ') || [];
-          const firstName = nameParts[0] || 'User';
-          const lastName = nameParts.slice(1).join(' ') || '';
-          
+          // Use first_name and last_name directly from database (from Google)
           setUser({
-            firstName,
-            lastName,
+            firstName: userData.first_name || 'User',
+            lastName: userData.last_name || '',
+            username: userData.username,
             email: userData.email,
-            role: userData.role,
             teamId: userData.team_id,
             picture: userData.profile_picture
           });

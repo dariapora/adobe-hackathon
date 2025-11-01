@@ -13,11 +13,11 @@ export default function Onboarding() {
 
   const form = useForm({
     initialValues: {
-      role: '',
+      username: '',
       teamId: '',
     },
     validate: {
-      role: (v) => (v.trim().length === 0 ? 'Role is required' : null),
+      username: (v) => (v.trim().length === 0 ? 'Username is required' : null),
       teamId: (v) => (v.trim().length === 0 ? 'Team ID is required' : null),
     },
   })
@@ -28,8 +28,8 @@ export default function Onboarding() {
       .then(response => {
         setUser(response.data.user)
         
-        // If user already has role and team_id, redirect to home
-        if (response.data.user.role && response.data.user.team_id) {
+        // If user already has username and team_id, redirect to home
+        if (response.data.user.username && response.data.user.team_id) {
           navigate('/')
         } else {
           setLoading(false)
@@ -48,7 +48,7 @@ export default function Onboarding() {
       const response = await axios.post(
         `${apiUrl}/auth/complete-profile`,
         {
-          role: values.role,
+          username: values.username,
           teamId: values.teamId
         },
         { withCredentials: true }
@@ -86,22 +86,24 @@ export default function Onboarding() {
           <div>
             <Title order={2}>Complete Your Profile</Title>
             <Text c="dimmed" mt="xs">
-              Welcome, {user?.name}! Please tell us a bit more about yourself.
+              Welcome, {user?.first_name} {user?.last_name}! Please complete your profile.
             </Text>
           </div>
 
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack gap="md">
               <TextInput
-                label="Role"
-                placeholder="e.g., Engineer, Designer, Manager"
+                label="Username"
+                placeholder="e.g., johndoe"
+                description="Choose a unique username"
                 required
-                {...form.getInputProps('role')}
+                {...form.getInputProps('username')}
               />
               
               <TextInput
                 label="Team ID"
                 placeholder="e.g., T-123"
+                description="Your team identifier"
                 required
                 {...form.getInputProps('teamId')}
               />

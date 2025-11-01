@@ -35,7 +35,8 @@ const User = sequelize.define('users', {
 
     username: {
         type: DataTypes.STRING,
-        allowNull: false,
+        unique: true,
+        allowNull: true,  // Will be set during onboarding
     },
 
     profile_picture: {
@@ -43,16 +44,16 @@ const User = sequelize.define('users', {
     },
 
     hd_domain: {
-        type: DataTypes.STRING,    //nu stim daca allow null sau nu
+        type: DataTypes.STRING,
     },
 
     role: {
-        type: DataTypes.STRING,  //nici la asta nu stim
+        type: DataTypes.STRING,  
     },
 
     team_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,    
+        type: DataTypes.STRING,  // Changed from UUID to STRING for custom IDs like "T-123"
+        allowNull: true,  // Will be set during onboarding
     }
 },
     {

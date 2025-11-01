@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('../config/passport');
+const User = require('../models/userModel');
 
 router.get('/google', 
     passport.authenticate('google', { 
@@ -13,7 +14,7 @@ router.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
         // Check if user needs to complete profile
-        const needsOnboarding = !req.user.role || !req.user.team_id;
+        const needsOnboarding = !req.user.username || !req.user.team_id;
         
         if (needsOnboarding) {
             res.redirect(`${process.env.FRONTEND_URL}/onboarding`);
@@ -46,14 +47,20 @@ router.post('/complete-profile', async (req, res) => {
     }
     
     try {
-        const { role, teamId } = req.body;
+        const { username, teamId } = req.body;
         
-        if (!role || !teamId) {
-            return res.status(400).json({ message: 'Role and Team ID are required' });
+        if (!username || !teamId) {
+            return res.status(400).json({ message: 'Username and Team ID are required' });
+        }
+        
+        // Check if username is already taken
+        const existingUser = await User.findOne({ where: { username } });
+        if (existingUser && existingUser.id !== req.user.id) {
+            return res.status(400).json({ message: 'Username already taken' });
         }
         
         await req.user.update({ 
-            role: role,
+            username: username,
             team_id: teamId 
         });
         

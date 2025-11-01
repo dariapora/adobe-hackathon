@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Header from './components/Header.jsx'
 import Login from './components/Login.jsx'
 import Onboarding from './components/Onboarding.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 const checkin = [
   '#ecf4ff',
@@ -28,9 +29,17 @@ function App() {
   return (
     <MantineProvider theme={theme}>
       <Routes>
-        <Route path="/" element={<Header />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Header />
+          </ProtectedRoute>
+        } />
         <Route path="/login" element={<Login />} />
-        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/onboarding" element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </MantineProvider>

@@ -15,15 +15,22 @@ passport.use(
                 let user = await User.findOne({ where: { google_id: profile.id } });
                 
                 if (!user) {
-                    // Create new user (role and team_id will be set during onboarding)
+                    // Parse Google display name into first and last name
+                    const nameParts = profile.displayName?.split(' ') || [];
+                    const firstName = nameParts[0] || 'User';
+                    const lastName = nameParts.slice(1).join(' ') || '';
+                    
+                    // Create new user (username and team_id will be set during onboarding)
+                    // first_name, last_name, email, profile picture come from Google
                     user = await User.create({
                         google_id: profile.id,
                         email: profile.emails[0].value,
                         email_verified: profile.emails[0].verified || false,
-                        name: profile.displayName,
+                        first_name: firstName,
+                        last_name: lastName,
                         profile_picture: profile.photos[0]?.value || null,
                         hd_domain: profile._json.hd || null,
-                        role: null,
+                        username: null,
                         team_id: null
                     });
                 }
