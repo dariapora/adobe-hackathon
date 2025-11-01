@@ -4,7 +4,6 @@ import { Box, NavLink, Button, Stack } from '@mantine/core';
 const data = [
   { label: 'Home'},
   { label: 'Chat' },
-  { label: 'Profile' },
   { label: 'Schedule' },
 ];
 
