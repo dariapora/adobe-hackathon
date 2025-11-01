@@ -4,5 +4,6 @@ const postController = require("../controllers/index").postController;
 
 router.post('/create-post', postController.createPost);
 router.get('/', postController.getAllPosts);
+router.get('/team/:team_id', postController.getTeamPosts);
 
 module.exports = router;

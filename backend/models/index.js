@@ -1,19 +1,33 @@
 const sequelize = require('../config/db');
 const User = require('./userModel');
-const Team = require("./teamModel")
+const Team = require("./teamModel");
+const Post = require("./postModel");
 
-User.belongsTo(Team, { 
-    foreignKey: 'team_id',
-    as: 'team'
+// User <-> Post relationships
+User.hasMany(Post, {
+    foreignKey: {
+        name: 'user_id',
+        allowNull: false
+    },
+    as: 'posts',
+    constraints: false
 });
 
-Team.hasOne(User, {
-    foreignKey: 'team_id',
-    as: 'user'
+Post.belongsTo(User, {
+    foreignKey: {
+        name: 'user_id',
+        allowNull: false
+    },
+    as: 'author',
+    constraints: false
 });
+
+// Note: team_id is just a string identifier, not a foreign key to teams table
+// Users and Posts just store team_id as a string (e.g., "T-125", "Engineering")
 
 module.exports = {
     sequelize,
     User,
     Team,
+    Post
 };

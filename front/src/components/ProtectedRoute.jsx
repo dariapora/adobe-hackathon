@@ -9,7 +9,6 @@ export default function ProtectedRoute({ children }) {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8090'
 
   useEffect(() => {
-    // Check if user is authenticated
     axios.get(`${apiUrl}/auth/user`, { withCredentials: true })
       .then(response => {
         if (response.data.user) {

@@ -1,5 +1,6 @@
 const {DataTypes} = require('sequelize')
 const sequelize = require('../config/db');
+const Team = require('./teamModel');
 
 const User = sequelize.define('users', {
     id: {
@@ -52,8 +53,8 @@ const User = sequelize.define('users', {
     },
 
     team_id: {
-        type: DataTypes.STRING,  // Changed from UUID to STRING for custom IDs like "T-123"
-        allowNull: true,  // Will be set during onboarding
+        type: DataTypes.STRING,  // Changed to STRING to accept "T-125" format
+        allowNull: true  // Will be set during onboarding
     }
 },
     {

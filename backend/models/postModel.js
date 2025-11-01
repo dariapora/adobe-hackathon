@@ -1,5 +1,6 @@
 const {DataTypes} = require('sequelize');
 const sequelize = require("../config/db");
+const Team = require('./teamModel');
 
 const Post = sequelize.define('posts', {
     id: {
@@ -26,13 +27,13 @@ const Post = sequelize.define('posts', {
         defaultValue: 0
     },
 
-    visibility: {
-        type: DataTypes.ENUM('all', 'team'),
-        defaultValue: 'all'
+    team_id: {
+        type: DataTypes.STRING,  // Changed to STRING to accept "T-125" format
+        allowNull: true  // null = visible to everyone, set = visible only to team
     }
 },
     {
-        timestamps: true,
+        freezeTableName: true,
     }
 );
 

@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Header from './components/Header.jsx'
 import Login from './components/Login.jsx'
 import Onboarding from './components/Onboarding.jsx'
+import Profile from './components/Profile.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 const checkin = [
@@ -38,6 +39,11 @@ function App() {
         <Route path="/onboarding" element={
           <ProtectedRoute>
             <Onboarding />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />

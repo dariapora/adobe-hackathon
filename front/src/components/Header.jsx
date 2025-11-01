@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Group, Image, Tabs, Box, Container, AppShell, Textarea, SegmentedControl, Button, Card, Stack, Text } from "@mantine/core";
+import { Group, Image, Tabs, Box, Container, AppShell, Textarea, SegmentedControl, Button, Card, Stack, Text, Avatar, ActionIcon } from "@mantine/core";
 import axios from "axios";
 import Home from "./Home";
 import Team from "./Team"; 
@@ -28,6 +28,7 @@ export default function Header() {
         } else {
           // Use first_name and last_name directly from database (from Google)
           setUser({
+            id: userData.id,  // Add user id for API calls
             firstName: userData.first_name || 'User',
             lastName: userData.last_name || '',
             username: userData.username,
@@ -59,32 +60,60 @@ export default function Header() {
     setComposerScope(activeTab === 'team' ? 'team' : 'all');
     setComposerOpen(true);
   };
-  const submitPost = () => {
+  const submitPost = async () => {
     const text = composerText.trim();
     if (!text || !user) return;
-    const authorName = `${user?.firstName || 'You'} ${user?.lastName || ''}`.trim();
-    const authorHandle = (user?.firstName || 'you').toLowerCase();
-    const newPost = {
-      id: String(Math.random()).slice(2),
-      author: { 
-        name: authorName || 'You', 
-        handle: authorHandle, 
-        avatar: user?.picture || 'https://i.pravatar.cc/100?img=1' 
-      },
-      createdAt: new Date(),
-      tags: [],
-      content: text,
-      image: null,
-      likes: 0,
-      comments: 0,
-      bookmarked: false,
-      teamId: composerScope === 'team' ? (user?.teamId || 'T-000') : (user?.teamId || null),
-      visibility: composerScope,
-    };
-    setPosts((cur) => [newPost, ...cur]);
-    setComposerText("");
-    setComposerScope('all');
-    setComposerOpen(false);
+    
+    try {
+      const postData = {
+        user_id: user.id,
+        content: text,
+        image: null,
+        team_id: user.teamId,
+        visibility: composerScope
+      };
+      
+      console.log('Submitting post:', postData);
+      
+      // Send post to backend
+      const response = await axios.post(
+        `${apiUrl}/api/post/create-post`,
+        postData,
+        { withCredentials: true }
+      );
+
+      console.log('Post created successfully:', response.data);
+
+      // Add the new post from backend to local state
+      const authorName = `${user?.firstName || 'You'} ${user?.lastName || ''}`.trim();
+      const authorHandle = (user?.firstName || 'you').toLowerCase();
+      const newPost = {
+        id: response.data.id || String(Math.random()).slice(2),
+        author: { 
+          name: authorName || 'You', 
+          handle: authorHandle, 
+          avatar: user?.picture || 'https://i.pravatar.cc/100?img=1' 
+        },
+        createdAt: response.data.createdAt || new Date(),
+        tags: [],
+        content: text,
+        image: null,
+        likes: response.data.likes || 0,
+        comments: 0,
+        bookmarked: false,
+        teamId: response.data.team_id,
+        visibility: composerScope,
+      };
+      
+      setPosts((cur) => [newPost, ...cur]);
+      setComposerText("");
+      setComposerScope('all');
+      setComposerOpen(false);
+    } catch (error) {
+      console.error('Error creating post:', error);
+      console.error('Error response:', error.response?.data);
+      alert('Failed to create post. Please try again.');
+    }
   };
 
   if (loading) {
@@ -114,6 +143,20 @@ export default function Header() {
                   <Tabs.Tab value="team">Team</Tabs.Tab>
                 </Tabs.List>
               </Tabs>
+              <ActionIcon 
+                variant="subtle" 
+                size="lg" 
+                radius="xl"
+                onClick={() => navigate('/profile')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Avatar 
+                  src={user?.picture} 
+                  size={36} 
+                  radius="xl"
+                  alt={`${user?.firstName || ''} ${user?.lastName || ''}`}
+                />
+              </ActionIcon>
             </Group>
         </Box>
       </AppShell.Header>
