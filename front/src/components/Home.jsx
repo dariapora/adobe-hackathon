@@ -1,8 +1,16 @@
 import { Container, Stack, Title, Text, Card, Group, Avatar, Badge, Image } from '@mantine/core'
 
+function getBadgeForXp(xp = 0) {
+  if (xp >= 1000) return { label: 'Legend', color: 'grape' };
+  if (xp >= 500) return { label: 'Senior', color: 'violet' };
+  if (xp >= 200) return { label: 'Mid-Level', color: 'indigo' };
+  if (xp >= 50) return { label: 'Junior', color: 'blue' };
+  return { label: 'Intern', color: 'gray' };
+}
+
 export default function Home({ posts = [] }) {
   return (
-    <Container size="lg">
+    <Container size="xl">
       <Stack my="md" gap="md">
         <Title order={2}>Home</Title>
         <Text c="dimmed">Welcome to your CheckIn feed.</Text>
@@ -24,6 +32,9 @@ export default function Home({ posts = [] }) {
                       <Text c="dimmed">@{post.author?.username}</Text>
                     )}
                     {post.team_id && <Badge variant="light">{post.team_id}</Badge>}
+                    <Badge size="sm" variant="light" color={getBadgeForXp(post.author?.experience || 0).color}>
+                      {getBadgeForXp(post.author?.experience || 0).label}
+                    </Badge>
                   </Group>
                   <Text style={{ whiteSpace: 'pre-wrap' }}>{post.content}</Text>
                   {post.image && (

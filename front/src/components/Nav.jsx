@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Box, NavLink, Button, Stack } from '@mantine/core';
 
 const data = [
-  { label: 'Home'},
+  { label: 'Home' },
+  { label: 'Team' },
+  { label: 'Experience' },
   { label: 'Chat' },
   { label: 'Schedule' },
 ];

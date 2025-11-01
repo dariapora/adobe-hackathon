@@ -21,13 +21,21 @@ const Controller = {
 
             console.log('Post created:', newPost.id);
 
+            // Increment user experience (e.g., +10 XP per post)
+            try {
+                const XP_PER_POST = 10;
+                await User.increment('experience', { by: XP_PER_POST, where: { id: user_id } });
+            } catch (incErr) {
+                console.error('Failed to increment user experience:', incErr);
+            }
+
             // Fetch the post with author info
             const postWithDetails = await Post.findByPk(newPost.id, {
                 include: [
                     {
                         model: User,
                         as: 'author',
-                        attributes: ['id', 'first_name', 'last_name', 'username', 'profile_picture']
+                        attributes: ['id', 'first_name', 'last_name', 'username', 'profile_picture', 'experience']
                     }
                 ]
             });
@@ -61,7 +69,7 @@ const Controller = {
                     {
                         model: User,
                         as: 'author',
-                        attributes: ['id', 'first_name', 'last_name', 'username', 'profile_picture']
+                        attributes: ['id', 'first_name', 'last_name', 'username', 'profile_picture', 'experience']
                     }
                 ],
                 order: [['createdAt', 'DESC']]
@@ -87,7 +95,7 @@ const Controller = {
                     {
                         model: User,
                         as: 'author',
-                        attributes: ['id', 'first_name', 'last_name', 'username', 'profile_picture']
+                        attributes: ['id', 'first_name', 'last_name', 'username', 'profile_picture', 'experience']
                     }
                 ],
                 order: [['createdAt', 'DESC']]

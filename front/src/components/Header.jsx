@@ -5,6 +5,8 @@ import axios from "axios";
 import Home from "./Home";
 import Team from "./Team"; 
 import Chat from "./Chat";
+import Schedule from "./Schedule";
+import Experience from "./Experience";
 import { initialPosts } from "../data/posts";
 import Nav from "./Nav.jsx";
 import logo from "../assets/logo.png";
@@ -34,7 +36,8 @@ export default function Header() {
             username: userData.username,
             email: userData.email,
             teamId: userData.team_id,
-            picture: userData.profile_picture
+            picture: userData.profile_picture,
+            experience: userData.experience || 0
           });
         }
         setLoading(false);
@@ -79,9 +82,35 @@ export default function Header() {
   const [composerScope, setComposerScope] = useState('all');
 
   const handleNavSelect = (label) => {
-    setActiveView(label);
+    // Route all navigation from left sidebar
     if (label === "Home") {
+      setActiveView("Home");
       setActiveTab("home");
+      setComposerOpen(false);
+      return;
+    }
+    if (label === "Team") {
+      setActiveView("Home");
+      setActiveTab("team");
+      setComposerOpen(false);
+      return;
+    }
+    if (label === "Experience") {
+      setActiveView("Home");
+      setActiveTab("experience");
+      setComposerOpen(false);
+      return;
+    }
+    if (label === "Chat") {
+      setActiveView("Chat");
+      setComposerOpen(false);
+      return;
+    }
+    if (label === "Schedule") {
+      setActiveView("Home");
+      setActiveTab("schedule");
+      setComposerOpen(false);
+      return;
     }
   };
 
@@ -155,20 +184,7 @@ export default function Header() {
               <Group gap="xs">
                 <Image src={logo} alt="Logo" width={32} height={32} radius="sm" />
               </Group>
-              <Tabs value={activeTab} onChange={(value) => {
-                setActiveTab(value);
-                if (value === "chat") {
-                  setActiveView("Chat");
-                } else {
-                  setActiveView("Home");
-                }
-              }}>
-                <Tabs.List>
-                  <Tabs.Tab value="home">Home</Tabs.Tab>
-                  <Tabs.Tab value="team">Team</Tabs.Tab>
-                  <Tabs.Tab value="chat">Chat</Tabs.Tab>
-                </Tabs.List>
-              </Tabs>
+              {/* Header links removed; navigation moved to left sidebar */}
               <ActionIcon 
                 variant="subtle" 
                 size="lg" 
@@ -194,12 +210,12 @@ export default function Header() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Box p="md">
+        <Box p={activeView === "Chat" ? 0 : "md"}>
           {activeView === "Chat" ? (
             <Chat user={user} />
           ) : (
             <>
-              {composerOpen && (
+              {composerOpen && activeTab !== 'experience' && (
                 <Card withBorder radius="md" p="md" mb="md">
                   <Stack gap="sm">
                     <Text fw={600}>Create a post</Text>
@@ -224,6 +240,8 @@ export default function Header() {
               )}
               {activeTab === "home" && <Home posts={posts} />}
               {activeTab === "team" && <Team posts={posts} user={user} />}
+              {activeTab === "experience" && <Experience user={user} />}
+              {activeTab === "schedule" && <Schedule user={user} />}
             </>
           )}
         </Box>
