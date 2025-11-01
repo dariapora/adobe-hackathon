@@ -85,13 +85,14 @@ export default function Header() {
     if (!text || !user) return;
     
     try {
-      const teamIdToSend = activeTab === 'team' ? user.teamId : null;
+      const isTeamPost = composerScope === 'team';
+      const teamIdToSend = isTeamPost ? user.teamId : null;
       const postData = {
         user_id: user.id,
         content: text,
         image: null,
         team_id: teamIdToSend,
-        visibility: activeTab === 'team' ? 'team' : 'all'
+        visibility: isTeamPost ? 'team' : 'all'
       };
       
       console.log('Submitting post:', postData);
